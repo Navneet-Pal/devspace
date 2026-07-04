@@ -5,7 +5,7 @@ import Container from "../UI/container";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#09090B]/80 backdrop-blur-xl">
+    <header className="hidden md:flex sticky top-0 z-50 border-b border-zinc-800/80 bg-[#09090B]/80 backdrop-blur-xl">
       <Container>
         <nav className="flex h-18 items-center justify-between ">
           <h1 className="text-2xl font-bold">DevSpace</h1>

@@ -1,7 +1,6 @@
 import Badge from "../UI/Badge";
 import Button from "../UI/Button";
-import Container from "../UI/container";
-import DashboardPreview from "../UI/DashboardPreview";
+import Container from "../UI/container"; 
 
 export default function Hero() {
   return (
@@ -10,7 +9,7 @@ export default function Hero() {
         <div className="flex flex-col items-center gap-8 text-center">
           <Badge>Built for Modern Development Teams</Badge>
 
-          <h1 className="max-w-4xl text-7xl leading-none font-bold tracking-tight">
+          <h1 className="md:text-6xl lg:text-7xl max-w-4xl text-4xl leading-none font-bold tracking-tight">
             Build Better Software, 
             <br/>
             Together.
@@ -21,14 +20,11 @@ export default function Hero() {
             products faster from one workspace.
           </p>
 
-          <div className="flex gap-10 items-center">
+          <div className="flex sm:flex-row gap-10 items-center">
             <Button variant="primary">Get Started</Button>
             <Button variant="secondary">Live Demo</Button>
           </div>
-        </div>
-
-
-        <DashboardPreview />
+        </div> 
 
       </Container>
     </section>
