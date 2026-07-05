@@ -21,7 +21,7 @@ export default function Navbar() {
                 {item?.label}
               </Link>
             ))}
-          </div>
+          </div> 
 
           <div className="flex gap-6 items-center">
             <Button variant="primary">Login</Button>
