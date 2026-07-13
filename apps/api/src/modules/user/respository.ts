@@ -18,8 +18,12 @@ export class UserRespository{
   async updateRefreshToken( id: string, refreshToken: string){
     return User.findByIdAndUpdate(
       id,
-      {refreshToken},
-      {new : true}
+      {refreshToken}, 
     );
   }
+
+  async findByEmailWithPassword(email:string){
+    return User.findOne({email}).select("+password");
+  }
+  
 }
