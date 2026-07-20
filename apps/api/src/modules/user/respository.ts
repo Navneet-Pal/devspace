@@ -15,7 +15,7 @@ export class UserRespository{
     return User.create(data);
   }
 
-  async updateRefreshToken( id: string, refreshToken: string){
+  async updateRefreshToken( id: string, refreshToken: string  | null){
     return User.findByIdAndUpdate(
       id,
       {refreshToken}, 
@@ -25,5 +25,13 @@ export class UserRespository{
   async findByEmailWithPassword(email:string){
     return User.findOne({email}).select("+password");
   }
+
+  async updateVerificationStatus(userId : string, val:boolean){
+    return User.findByIdAndUpdate(userId,{ isVerified : val },{new : true});
+  }
+
+  async updatePassword(id:string,password:string){
+    return User.findByIdAndUpdate(id, {password,refreshToken:null},{new:true})
+  };
   
 }

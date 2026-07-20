@@ -16,6 +16,8 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.enum(["15m", "30m", "1h"]),
   JWT_REFRESH_EXPIRES_IN: z.enum(["7d", "30d"]),
   CLIENT_URL: z.string().url(),
+  SMTP_EMAIL : z.string().email(),
+  SMTP_PASSWORD : z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);
