@@ -1,7 +1,7 @@
-import { NAV_LINKS } from "@/constant/Navbar";
-import Button from "../UI/Button";
+import { NAV_LINKS } from "@/constants/Navbar"; 
 import Link from "next/link";
-import Container from "../UI/container";
+import Button from "../common/Button";
+import Container from "../common/container";
 
 export default function Navbar() {
   return (

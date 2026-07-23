@@ -1,6 +1,6 @@
-import Badge from "../UI/Badge";
-import Button from "../UI/Button";
-import Container from "../UI/container"; 
+import Badge from "../common/Badge"; 
+import Button from "../common/Button";
+import Container from "../common/container"; 
 
 export default function Hero() {
   return (
