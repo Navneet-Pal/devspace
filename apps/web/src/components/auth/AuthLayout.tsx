@@ -7,8 +7,8 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <main className="h-[calc(100vh-72px)] bg-black text-white">
-      <div className="grid h-full w-full lg:grid-cols-2">
+    <main className="min-h-screen bg-black text-white">
+      <div className="grid min-h-screen w-full lg:grid-cols-2">
         <aside className="hidden border-r border-zinc-800 lg:block">
           <AuthShowcase />
         </aside>
