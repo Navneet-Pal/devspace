@@ -6,6 +6,9 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "../ui/Button";
+import { useResetPassword } from "@/hooks/auth/useResetPassword";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 
 export default function ResetPasswordForm(){
@@ -20,8 +23,34 @@ export default function ResetPasswordForm(){
     const [showPassword,setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    async function onSubmit(data:resetPasswordValues){
-        console.log(data);
+    const {mutate,isPending} = useResetPassword();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const token = searchParams.get("token");
+
+    function onSubmit(data:resetPasswordValues){
+
+        if(!token) {
+            toast.error("Invalid reset link");
+            return;
+        }
+
+        mutate(
+            {
+                token,
+                password: data.password,
+            },
+            {
+                onSuccess:(response)=>{
+                    toast.success(response.message);
+                    router.replace("/login");
+                },
+
+                onError:(error)=>{
+                    toast.error( error.response?.data.message ?? "Something went wrong");
+                }
+            }
+        )
     }
 
     return(
@@ -70,8 +99,8 @@ export default function ResetPasswordForm(){
                 }
             </div>
 
-                <Button type="submit" className="w-full" >
-                    Reset Password
+                <Button type="submit" disabled={isPending} className="w-full" >
+                   { isPending ? "Resetting..." : "Reset Password"}
                 </Button>
 
         </form>

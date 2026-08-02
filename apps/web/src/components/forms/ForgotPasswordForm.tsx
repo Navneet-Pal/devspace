@@ -4,6 +4,8 @@ import { Label } from "../ui/label";
 import { forgotPasswordSchema, forgotPasswordValues } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../ui/Button";
+import { useForgotPassword } from "@/hooks/auth/useForgotPassword";
+import { toast } from "sonner";
 
 
 export default function ForgotPasswordForm(){
@@ -12,8 +14,21 @@ export default function ForgotPasswordForm(){
         defaultValues:{email : ""}
     });
 
-    async function onSubmit(data : forgotPasswordValues){
-        console.log(data);
+    const {mutate, isPending} = useForgotPassword();
+
+    function onSubmit(data : forgotPasswordValues){
+        mutate(
+            data,
+            {
+                onSuccess : (response)=>{
+                    toast.success(response.message ?? "Reset Password Link has been sent to registered Email.");
+                },
+
+                onError: (error) =>{ 
+                    toast.error(error.response?.data.message ?? "Something went wrong");
+                }
+            }
+        )
     }
     return(
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -30,8 +45,8 @@ export default function ForgotPasswordForm(){
                 )}
             </div>
 
-            <Button type="submit" className="w-full h-10">
-                Send reset link
+            <Button type="submit" disabled={isPending} className="w-full h-10">
+               { isPending ? "Sending..." : "Send reset link"}
             </Button>
         </form>
     );

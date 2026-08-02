@@ -1,11 +1,19 @@
+"use client";
+
 import { ReactNode } from "react";
 import DashboardHeader from "../header/DashboardHeader";
 import DashboardSidebar from "../sidebar/DashboardSidebar";
+import { useAuthStore } from "@/store/auth";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { user, accessToken, isAuthenticated } = useAuthStore();
+
+console.log(user);
+console.log(accessToken);
+console.log(isAuthenticated);
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <DashboardSidebar />

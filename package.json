@@ -1,14 +1,17 @@
 {
   "name": "devspace",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-  "dev:web": "pnpm --filter web dev",
-  "dev:api": "pnpm --filter api dev"
-},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module"
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm --recursive build",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
 }

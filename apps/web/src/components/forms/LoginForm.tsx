@@ -10,6 +10,10 @@ import { Button } from "../ui/Button";
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLogin } from "@/hooks/auth/useLogin";
+import { toast } from "sonner"; 
+import { useAuthStore } from "@/store/auth";
 
 export default function LoginForm() {
   const {
@@ -27,12 +31,31 @@ export default function LoginForm() {
     },
   });
 
-  async function onSubmit(data: LoginFormValues) {
-    console.log(data);
+  const router = useRouter();
+  const {mutate, isPending} = useLogin();
+  const {setAuth}  = useAuthStore();
 
-    setError("email", {
-      type: "manual",
-      message: "Invalid email or Password",
+  async function onSubmit(data: LoginFormValues) {
+    
+    mutate( data, {
+      onSuccess : (response)=>{
+        toast.success(response.message);
+        setAuth(response.user,response.accessToken);
+        router.push("/dashboard");
+      },
+
+      onError : (error) =>{ 
+
+        setError("email", {
+          type: "manual",
+          message: error.response?.data.message ?? "Invalid email or password",
+        });
+
+        toast.error(
+          error.response?.data.message ?? "Invalid email or password",
+        );
+
+      }
     });
   }
 
@@ -109,9 +132,9 @@ export default function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isSubmitting ? "SigningIn...." : "Sign In"}
+      <Button type="submit" className="w-full" disabled={isPending}>
+        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isPending ? "SigningIn...." : "Sign In"}
       </Button>
     </form>
   );

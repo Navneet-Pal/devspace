@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { RegisterFormValues, registerSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegister } from "@/hooks/auth/useRegister";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
   const { mutate, isPending } = useRegister();
@@ -26,6 +28,7 @@ export default function RegisterForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
 
   const onSubmit = (data: RegisterFormValues) => {
     mutate(
@@ -36,10 +39,13 @@ export default function RegisterForm() {
       },
       {
         onSuccess: (response) => {
-          console.log(response.message);
+          toast.success(response.message);
+
+          router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
         },
+
         onError: (error) => {
-          console.log(error);
+          toast.error(error.response?.data.message ?? "Something went wrong");
         },
       },
     );

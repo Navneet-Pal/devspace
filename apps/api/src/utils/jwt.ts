@@ -21,3 +21,7 @@ export const generateRefreshToken = (userId: string)=>{
         }
     )
 }
+
+export const verifyRefreshToken = (token:string)  =>{
+    return jwt.verify(token,env.JWT_REFRESH_SECRET) as {userId:string;};
+};

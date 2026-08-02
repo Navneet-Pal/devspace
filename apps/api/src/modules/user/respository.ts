@@ -15,6 +15,10 @@ export class UserRespository{
     return User.create(data);
   }
 
+  async findByRefreshToken(refreshToken : string){
+    return User.findOne({refreshToken});
+  }
+
   async updateRefreshToken( id: string, refreshToken: string  | null){
     return User.findByIdAndUpdate(
       id,

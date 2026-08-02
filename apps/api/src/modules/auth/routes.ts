@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { forgotPassword, login, logout, me, register, resetPassword } from "./controller.js";
+import { forgotPassword, login, logout, me, refresh, register, resetPassword } from "./controller.js";
 import { authenticate } from "../../middlewares/auth.js";
 
 
@@ -11,5 +11,6 @@ router.get("/me",authenticate,me);
 router.post("/logout",authenticate,logout);
 router.post("/forgot-password",forgotPassword);
 router.post("/reset-password",resetPassword);
+router.post("/refresh",refresh);
 
 export default router;

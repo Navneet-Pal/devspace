@@ -6,9 +6,13 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import Logo from "@/components/common/Logo";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, MailCheck, RotateCw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 
 export default function VerifyEmail(){
+    const searchParams = useSearchParams();
+    const email = searchParams.get("email");
+
     return(
         <AuthCard>
             <div className="flex flex-col items-center gap-4">
@@ -16,7 +20,7 @@ export default function VerifyEmail(){
                 <MailCheck className="w-12 h-12 text-zinc-100" />
             </div>
 
-            <AuthHeader title ="Check your Email" description="We 've sent a link to nav*****@company.com. Click the link in the email to continue." />
+            <AuthHeader title ="Check your Email" description={`We 've sent a link to ${email ?? "your email address"} Click the link in the email to continue.`}/>
             
             <div className="p-3 border-border bg-muted/30 bg-zinc900/50 rounded-3xl">
                 <p className="text-sm text-center text-zinc-400">Didn't get it? Check your spam folder or resend the email below.</p>

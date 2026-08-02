@@ -1,5 +1,9 @@
 import { ApiError } from "../../utils/ApiError.js";
-import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../../utils/jwt.js";
 import { UserRespository } from "../user/respository.js";
 import {
   ForgotPasswordInput,
@@ -48,7 +52,7 @@ export class AuthService {
       TOKEN_TYPE.VERIFY_EMAIL,
     );
 
-    const verificationLink = `${env.CLIENT_URL}/verify-email?token=${verifyToken}`;
+    const verificationLink = `${env.CLIENT_URL}/email-verified?token=${verifyToken}`;
 
     const html = ` <h2>Welcome to DevSpace 🚀</h2>
 
@@ -117,6 +121,32 @@ export class AuthService {
     await this.userRespository.updateRefreshToken(userId, null);
   }
 
+  async refresh(refreshToken: string) {
+    if (!refreshToken) throw new ApiError(401, "Refresh Token is required");
+
+    const payload = verifyRefreshToken(refreshToken);
+
+    const user = await this.userRespository.findByRefreshToken(refreshToken);
+
+    if (!user || user._id.toString() !== payload.userId) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const accessToken = generateAccessToken(user._id.toString());
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+    };
+
+    return {
+      accessToken,
+      user: userResponse,
+    };
+  }
+
   async forgotPassword(data: ForgotPasswordInput) {
     const user = await this.userRespository.findByEmail(data.email);
 
@@ -164,24 +194,25 @@ export class AuthService {
       throw new ApiError(400, "Invalid reset password token");
     }
 
-    if(verificationToken.expiresAt < new Date()){
-      throw new ApiError(400,"Reset Password token has expired");
+    if (verificationToken.expiresAt < new Date()) {
+      throw new ApiError(400, "Reset Password token has expired");
     }
 
-    const user = await this.userRespository.findById(verificationToken.userId.toString());
+    const user = await this.userRespository.findById(
+      verificationToken.userId.toString(),
+    );
 
-    if(!user){
-      throw new ApiError(404,"User Not Found");
+    if (!user) {
+      throw new ApiError(404, "User Not Found");
     }
 
-    const hashedPassword = await bcrypt.hash(data.password,10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     await this.userRespository.updatePassword(
       user._id.toString(),
       hashedPassword,
-    )
+    );
 
     await this.verificationRespository.deleteByToken(data.token);
-
   }
 }
