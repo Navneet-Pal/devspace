@@ -1,7 +1,7 @@
 
 type ButtonProps = {
     children : React.ReactNode;
-    variant : "primary" | "secondary";
+    variant? : "primary" | "secondary";
 };
 
 export default function Button({

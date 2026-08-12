@@ -2,7 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useState } from "react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { useForm } from "react-hook-form";
 import { RegisterFormValues, registerSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";

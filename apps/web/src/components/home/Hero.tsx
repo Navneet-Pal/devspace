@@ -1,5 +1,5 @@
 import Badge from "../common/Badge"; 
-import Button from "../common/Button";
+import Button from "../common/button";
 import Container from "../common/container"; 
 
 export default function Hero() {

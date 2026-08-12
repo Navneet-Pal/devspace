@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Input } from "../ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { useResetPassword } from "@/hooks/auth/useResetPassword";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";

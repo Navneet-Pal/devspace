@@ -1,4 +1,4 @@
-import Button from "./Button";
+import Button from "./button";
 import Container from "./container";
 
 export default function DashboardPreview() {

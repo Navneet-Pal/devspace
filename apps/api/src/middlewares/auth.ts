@@ -7,23 +7,30 @@ import { UserRespository } from "../modules/user/respository.js";
 
 const userRespository = new UserRespository();
 
-export const authenticate = async(req:Request, res: Response,next:NextFunction)=>{
-    const header = req.headers.authorization;
+export const authenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const header = req.headers.authorization;
 
-    if(!header || !header.startsWith("Bearer ")){
-        throw new ApiError(401,"Unauthorized");
-    }
+  if (!header || !header.startsWith("Bearer ")) {
+    throw new ApiError(401, "Unauthorized");
+  }
 
-    const token = header.split(" ")[1];
+  const token = header.split(" ")[1];
 
-    const decoded = jwt.verify(token,env.JWT_ACCESS_SECRET) as IJwtPayload;
+  const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as IJwtPayload;
 
-    const user = await userRespository.findById(decoded.userId);
+  const user = await userRespository.findById(decoded.userId);
 
-    if(!user){
-        throw new ApiError(401,"Unauthorized");
-    }
+  if (!user) {
+    throw new ApiError(401, "Unauthorized");
+  }
 
-    req.user = user;
-    next();
+  req.user = {
+    _id: user._id,
+    email: user.email,
+  };
+  next();
 };

@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label"; 
 import { forgotPasswordSchema, forgotPasswordValues } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { useForgotPassword } from "@/hooks/auth/useForgotPassword";
 import { toast } from "sonner";
 

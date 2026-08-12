@@ -1,6 +1,6 @@
 import { NAV_LINKS } from "@/constants/Navbar"; 
 import Link from "next/link";
-import Button from "../common/Button";
+import Button from "../common/button";
 import Container from "../common/container";
 
 export default function Navbar() {

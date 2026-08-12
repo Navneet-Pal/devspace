@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
