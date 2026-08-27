@@ -1,19 +1,25 @@
 import { Types } from "mongoose";
-import { Role } from "../constants/roles.js";
-import { IWorkspace } from "../modules/workspace/types.ts";
-import { IWorkspaceMember } from "../modules/workspaceMember/types.ts";
+
+import { IWorkspace } from "../modules/workspace/types.js";
+import { IWorkspaceMember } from "../modules/workspaceMember/types.js";
+import { IProjectMember } from "../modules/projectMember/types.js";
+import { IProject } from "../modules/project/types.js"; 
 
 declare global {
   namespace Express {
     interface Request {
       user: {
         _id: Types.ObjectId;
-        email: string; 
+        email: string;
       };
 
-      workspace : IWorkspace;
+      workspace: IWorkspace;
 
-      workspaceMember : IWorkspaceMember
+      workspaceMember: IWorkspaceMember;
+
+      project: IProject;
+
+      projectMember: IProjectMember;
     }
   }
 }

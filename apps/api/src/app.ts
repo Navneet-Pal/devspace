@@ -7,6 +7,13 @@ import verificationRoutes from "./modules/verification/route.js";
 import workspaceRoutes from "./modules/workspace/route.js"
 import workspaceInvitationRoutes from "./modules/workspaceInvitation/routes.js";
 import workspaceMemberRoutes from "./modules/workspaceMember/route.js";
+import projectRoutes from "./modules/project/route.js";
+import projectMemberRoutes from "./modules/projectMember/route.js";
+import taskRoutes from "./modules/task/route.js";
+import commentRoutes from "./modules/comment/route.js";
+import activityRoutes from "./modules/activity/route.js";
+import documentRoutes from "./modules/document/route.js";
+import fileRoutes from "./modules/file/route.js";
 
 const app = express();
 app.use(express.json());
@@ -30,5 +37,12 @@ app.use("/api/v1/workspaces",workspaceRoutes);
 app.use("/api/v1", workspaceInvitationRoutes);
 
 app.use("/api/v1",workspaceMemberRoutes);
+app.use("/api/v1", projectRoutes);
+app.use("/api/v1", projectMemberRoutes);
+app.use("/api/v1", taskRoutes); 
+app.use("/api/v1", commentRoutes);
+app.use("/api/v1", activityRoutes);
+app.use("/api/v1", documentRoutes);
+app.use("/api/v1", fileRoutes);
 
 export default app;

@@ -41,9 +41,15 @@ export const PERMISSION = {
   // Notification
   NOTIFICATION_READ: "notification:read",
   NOTIFICATION_UPDATE: "notification:update",
+
+  // Project Member
+
+  PROJECT_MEMBER_READ: "project_member:read",
+  PROJECT_MEMBER_ADD: "project_member:add",
+  PROJECT_MEMBER_UPDATE_ROLE: "project_member:update_role",
+  PROJECT_MEMBER_REMOVE: "project_member:remove",
 } as const;
 
-export type Permission =
-  (typeof PERMISSION)[keyof typeof PERMISSION];
+export type Permission = (typeof PERMISSION)[keyof typeof PERMISSION];
 
 export const PERMISSIONS = Object.values(PERMISSION);

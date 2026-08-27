@@ -12,4 +12,4 @@ export default async function WorkspacePage({
   const { workspaceId } = await params;
 
   return <WorkspaceDashboard workspaceId={workspaceId} />;
-}
+} 

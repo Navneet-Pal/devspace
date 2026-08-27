@@ -151,9 +151,12 @@ export default function MembersPage({ params }: MembersPageProps) {
                       {member.role !== "OWNER" && (
                         <DropdownMenu>
                           <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            render =
+                            {
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            }
                           </DropdownMenuTrigger>
 
                           <DropdownMenuContent align="end">

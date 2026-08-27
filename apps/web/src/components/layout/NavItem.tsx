@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
@@ -11,18 +11,34 @@ interface NavItemProps {
   icon: React.ElementType;
 }
 
-export const NavItem = ({
-  title,
-  href,
-  icon: Icon,
-}: NavItemProps) => {
+export const NavItem = ({ title, href, icon: Icon }: NavItemProps) => {
   const pathname = usePathname();
+  const params = useParams();
 
-  const isActive = pathname === href;
+  const workspaceId = params.workspaceId as string | undefined;
+
+  const getHref = () => {
+    // Workspace-specific navigation
+    if (
+      workspaceId &&
+      ["/projects", "/tasks", "/members", "/invitations", "/settings"].includes(
+        href,
+      )
+    ) {
+      return `/dashboard/workspaces/${workspaceId}${href}`;
+    }
+
+    return href;
+  };
+
+  const finalHref = getHref();
+
+  const isActive =
+    pathname === finalHref || pathname.startsWith(`${finalHref}/`);
 
   return (
     <Link
-      href={href}
+      href={finalHref}
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
         isActive

@@ -1,0 +1,50 @@
+import { Types } from "mongoose";
+
+export const ACTIVITY_TYPE = {
+  PROJECT_CREATED: "PROJECT_CREATED",
+  PROJECT_UPDATED: "PROJECT_UPDATED",
+
+  TASK_CREATED: "TASK_CREATED",
+  TASK_UPDATED: "TASK_UPDATED",
+  TASK_DELETED: "TASK_DELETED",
+  TASK_STATUS_CHANGED: "TASK_STATUS_CHANGED",
+  TASK_PRIORITY_CHANGED: "TASK_PRIORITY_CHANGED",
+  TASK_ASSIGNED: "TASK_ASSIGNED",
+  TASK_UNASSIGNED: "TASK_UNASSIGNED",
+  TASK_MOVED: "TASK_MOVED",
+
+  COMMENT_CREATED: "COMMENT_CREATED",
+  COMMENT_UPDATED: "COMMENT_UPDATED",
+  COMMENT_DELETED: "COMMENT_DELETED",
+
+  MEMBER_ADDED: "MEMBER_ADDED",
+  MEMBER_REMOVED: "MEMBER_REMOVED",
+  MEMBER_ROLE_CHANGED: "MEMBER_ROLE_CHANGED",
+
+  DOCUMENT_CREATED: "DOCUMENT_CREATED",
+  DOCUMENT_UPDATED: "DOCUMENT_UPDATED",
+  DOCUMENT_DELETED: "DOCUMENT_DELETED",
+
+  FILE_UPLOADED: "FILE_UPLOADED",
+  FILE_DELETED: "FILE_DELETED",
+} as const;
+
+export type ActivityType = (typeof ACTIVITY_TYPE)[keyof typeof ACTIVITY_TYPE];
+
+export interface IActivity {
+  _id: Types.ObjectId;
+
+  workspaceId: Types.ObjectId;
+
+  projectId: Types.ObjectId;
+
+  taskId: Types.ObjectId | null;
+
+  actorId: Types.ObjectId;
+
+  type: ActivityType;
+
+  metadata: Record<string, unknown>;
+
+  createdAt: Date;
+}
