@@ -99,7 +99,7 @@ export const FilePreviewDialog = ({
         </div>
 
         <div className="flex justify-end border-t bg-muted/10 px-6 py-4">
-          <a href={file.downloadUrl} className="...">
+          <a href={file.secureUrl} className="...">
             <Download className="mr-2 h-4 w-4" />
             Download
           </a>
