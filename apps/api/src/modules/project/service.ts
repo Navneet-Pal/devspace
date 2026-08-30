@@ -60,7 +60,7 @@ class ProjectService {
       ACTIVITY_TYPE.PROJECT_CREATED,
       {
         projectId: project._id.toString(),
-        name: project.name,
+        projectName: project.name,
       },
     );
 
@@ -146,6 +146,7 @@ class ProjectService {
         ACTIVITY_TYPE.PROJECT_UPDATED,
         {
           projectId,
+          projectName: project.name,
           changes: {
             ...(nameChanged && {
               name: {

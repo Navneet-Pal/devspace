@@ -5,6 +5,7 @@ import { ApiResponse } from "../../utils/apiResponse.js";
 import { StatusCode } from "../../constants/statusCode.js";
 
 import { taskService } from "./service.js";
+import type { ProjectRole } from "../../constants/projectRole.js";
 
 export const createTask = asyncHandler(async (req: Request, res: Response) => {
   const task = await taskService.createTask(
@@ -46,7 +47,7 @@ export const updateTask = asyncHandler(async (req: Request, res: Response) => {
     req.params.projectId as string,
     req.params.taskId as string,
     req.user._id.toString(),
-    req.projectMember.role,
+    req.projectMember?.role as ProjectRole,
     req.body,
   );
 
@@ -62,7 +63,7 @@ export const updateTaskStatus = asyncHandler(
       req.params.projectId as string,
       req.params.taskId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role as ProjectRole,
       req.body.status,
     );
 
@@ -129,7 +130,7 @@ export const updateTaskPosition = asyncHandler(
       req.params.projectId as string,
       req.params.taskId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role as ProjectRole,
       req.body.position,
     );
 

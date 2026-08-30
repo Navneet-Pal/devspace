@@ -4,7 +4,7 @@ import { StatusCode } from "../../constants/statusCode.js";
 import { PROJECT_ROLE, ProjectRole } from "../../constants/projectRole.js";
 import { ApiError } from "../../utils/ApiError.js";
 
-import { projectMemberRepository } from "../projectMember/repository.js";
+import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
 
@@ -23,16 +23,21 @@ class TaskService {
     userId: string,
     data: CreateTaskInput,
   ) {
+    /*
+     * A task can be assigned to any member of the workspace.
+     * Project membership is not required for task assignment.
+     */
     if (data.assignedTo) {
-      const projectMember = await projectMemberRepository.findByProjectAndUser(
-        projectId,
-        data.assignedTo,
-      );
+      const workspaceMember =
+        await workspaceMemberRepository.findByUserAndWorkspace(
+          workspaceId,
+          data.assignedTo,
+        );
 
-      if (!projectMember) {
+      if (!workspaceMember) {
         throw new ApiError(
           StatusCode.BAD_REQUEST,
-          "Assigned user is not a member of this project.",
+          "Assigned user is not a member of this workspace.",
         );
       }
     }
@@ -53,7 +58,7 @@ class TaskService {
       ACTIVITY_TYPE.TASK_CREATED,
       {
         taskId: task._id.toString(),
-        title: task.title,
+        taskTitle: task.title,
       },
       task._id,
     );
@@ -122,6 +127,7 @@ class TaskService {
         ACTIVITY_TYPE.TASK_UPDATED,
         {
           taskId,
+          taskTitle: task.title,
           changes: {
             ...(titleChanged && {
               title: {
@@ -185,6 +191,7 @@ class TaskService {
       ACTIVITY_TYPE.TASK_STATUS_CHANGED,
       {
         taskId,
+        taskTitle: task.title,
         from: task.status,
         to: status,
       },
@@ -224,6 +231,7 @@ class TaskService {
       ACTIVITY_TYPE.TASK_PRIORITY_CHANGED,
       {
         taskId,
+        taskTitle: task.title,
         from: task.priority,
         to: priority,
       },
@@ -242,16 +250,20 @@ class TaskService {
   ) {
     const task = await this.getTask(projectId, taskId);
 
+    /*
+     * A task can be assigned to any workspace member.
+     */
     if (assignedTo) {
-      const projectMember = await projectMemberRepository.findByProjectAndUser(
-        projectId,
-        assignedTo,
-      );
+      const workspaceMember =
+        await workspaceMemberRepository.findByUserAndWorkspace(
+          workspaceId,
+          assignedTo,
+        );
 
-      if (!projectMember) {
+      if (!workspaceMember) {
         throw new ApiError(
           StatusCode.BAD_REQUEST,
-          "Assigned user is not a member of this project.",
+          "Assigned user is not a member of this workspace.",
         );
       }
     }
@@ -282,6 +294,7 @@ class TaskService {
         ACTIVITY_TYPE.TASK_ASSIGNED,
         {
           taskId,
+          taskTitle: task.title,
           from: previousAssigneeId,
           to: assignedTo,
         },
@@ -295,6 +308,7 @@ class TaskService {
         ACTIVITY_TYPE.TASK_UNASSIGNED,
         {
           taskId,
+          taskTitle: task.title,
           from: previousAssigneeId,
           to: null,
         },
@@ -338,6 +352,7 @@ class TaskService {
       ACTIVITY_TYPE.TASK_MOVED,
       {
         taskId,
+        taskTitle: task.title,
         from: task.position,
         to: position,
       },
@@ -371,7 +386,7 @@ class TaskService {
       ACTIVITY_TYPE.TASK_DELETED,
       {
         taskId,
-        title: task.title,
+        taskTitle: task.title,
       },
       taskId,
     );

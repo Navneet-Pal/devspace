@@ -9,9 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { useProject } from "@/hooks/project/useProject";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 
 import { EditProjectDialog } from "@/components/project/EditProjectDialog";
 import { ProjectActions } from "@/components/project/ProjectActions";
+
+import { useAuthStore } from "@/store/auth";
 
 interface ProjectLayoutProps {
   children: ReactNode;
@@ -29,9 +32,26 @@ export default function ProjectLayout({
 
   const pathname = usePathname();
 
+  const user = useAuthStore((state) => state.user);
+
   const { data, isLoading, isError } = useProject(workspaceId, projectId);
 
+  const {
+    data: membersData,
+    isLoading: isMembersLoading,
+    isError: isMembersError,
+  } = useWorkspaceMembers(workspaceId);
+
   const project = data?.data;
+
+  const workspaceMembers = membersData?.data ?? [];
+
+  const currentMember = user
+    ? workspaceMembers.find((member) => member.userId._id === user._id)
+    : undefined;
+
+  const canManageProject =
+    currentMember?.role === "OWNER" || currentMember?.role === "ADMIN";
 
   const projectBasePath = `/dashboard/workspaces/${workspaceId}/projects/${projectId}`;
 
@@ -53,7 +73,7 @@ export default function ProjectLayout({
     pathname === `${projectBasePath}/files` ||
     pathname.startsWith(`${projectBasePath}/files/`);
 
-  if (isLoading) {
+  if (isLoading || isMembersLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading project...</p>
@@ -61,7 +81,7 @@ export default function ProjectLayout({
     );
   }
 
-  if (isError || !project) {
+  if (isError || isMembersError || !project) {
     return (
       <div className="space-y-4">
         <Link href={`/dashboard/workspaces/${workspaceId}/projects`}>
@@ -95,9 +115,9 @@ export default function ProjectLayout({
             <h1 className="text-3xl font-semibold">{project.name}</h1>
 
             <Badge
-              variant={project.status === "ACTIVE" ? "default" : "secondary"}
+              variant={project.status === "Active" ? "default" : "secondary"}
             >
-              {project.status === "ACTIVE" ? "Active" : "Archived"}
+              {project.status === "Active" ? "Active" : "Archived"}
             </Badge>
           </div>
 
@@ -108,17 +128,20 @@ export default function ProjectLayout({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <EditProjectDialog
-            workspaceId={workspaceId}
-            projectId={projectId}
-            name={project.name}
-            description={project.description}
-            status={project.status}
-          />
+        {/* Only OWNER / ADMIN can manage the project */}
+        {canManageProject && (
+          <div className="flex items-center gap-2">
+            <EditProjectDialog
+              workspaceId={workspaceId}
+              projectId={projectId}
+              name={project.name}
+              description={project.description}
+              status={project.status}
+            />
 
-          <ProjectActions workspaceId={workspaceId} projectId={projectId} />
-        </div>
+            <ProjectActions workspaceId={workspaceId} projectId={projectId} />
+          </div>
+        )}
       </div>
 
       {/* Project Navigation */}
@@ -148,7 +171,7 @@ export default function ProjectLayout({
             </Button>
           </Link>
 
-          {/* Future sections */}
+          {/* Documentation */}
           <Link href={`${projectBasePath}/documentation`}>
             <Button
               variant="ghost"
@@ -160,6 +183,7 @@ export default function ProjectLayout({
             </Button>
           </Link>
 
+          {/* Files */}
           <Link href={`${projectBasePath}/files`}>
             <Button
               variant="ghost"
@@ -171,6 +195,7 @@ export default function ProjectLayout({
             </Button>
           </Link>
 
+          {/* Activity */}
           <Link href={`${projectBasePath}/activity`}>
             <Button
               variant="ghost"
@@ -181,10 +206,6 @@ export default function ProjectLayout({
               Activity
             </Button>
           </Link>
-
-          <Button variant="ghost" className="rounded-none">
-            Members
-          </Button>
         </nav>
       </div>
 

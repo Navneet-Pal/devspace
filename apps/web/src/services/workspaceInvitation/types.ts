@@ -4,19 +4,37 @@ export type InvitationRole = "OWNER" | "ADMIN" | "MEMBER";
 
 export type InvitationStatus = "PENDING" | "REJECTED" | "CANCELLED";
 
+export interface WorkspaceInvitationUser {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+export interface WorkspaceInvitationWorkspace {
+  _id: string;
+  name: string;
+  avatar?: {
+    publicId?: string;
+    url?: string;
+  };
+}
+
 export interface WorkspaceInvitation {
   _id: string;
-  workspaceId: string;
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-  };
-  invitedBy: string;
+
+  workspaceId: WorkspaceInvitationWorkspace;
+
+  userId: WorkspaceInvitationUser;
+
+  invitedBy: WorkspaceInvitationUser;
+
   role: InvitationRole;
+
   status: InvitationStatus;
+
   createdAt: string;
+
   updatedAt: string;
 }
 

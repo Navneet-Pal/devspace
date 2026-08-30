@@ -13,17 +13,11 @@ export const Header = () => {
         <p className="text-sm text-muted-foreground">Welcome back 👋</p>
       </div>
 
-      <div className="flex items-center gap-3">
-        <SearchBar />
+      <div className="flex items-center gap-3"> 
 
         <Button size="icon" variant="outline">
           <Bell className="h-4 w-4" />
-        </Button>
-
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create
-        </Button>
+        </Button> 
       </div>
     </header>
   );

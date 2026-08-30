@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+
 import { workspaceService } from "./service.js";
+
 import { ApiResponse } from "../../utils/apiResponse.js";
 import { StatusCode } from "../../constants/statusCode.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
@@ -78,29 +80,37 @@ export const updateWorkspace = asyncHandler(
 
 export const deleteWorkspace = asyncHandler(
   async (req: Request, res: Response) => {
-    await workspaceService.deleteWorkspace(req.params.workspaceId as string);
+    const workspace = await workspaceService.deleteWorkspace(
+      req.params.workspaceId as string,
+    );
 
     return res
       .status(StatusCode.OK)
       .json(
-        new ApiResponse(StatusCode.OK, null, "Workspace deleted successfully."),
+        new ApiResponse(
+          StatusCode.OK,
+          workspace,
+          "Workspace deleted successfully.",
+        ),
       );
   },
 );
 
-export const updateWorkspaceLogo = asyncHandler(async (req:Request, res:Response) => {
-  const workspace = await workspaceService.updateLogo(
-    req.params.workspaceId as string,
-    req.file,
-  );
-
-  return res
-    .status(StatusCode.OK)
-    .json(
-      new ApiResponse(
-        StatusCode.OK,
-        workspace,
-        "Workspace logo updated successfully.",
-      ),
+export const updateWorkspaceLogo = asyncHandler(
+  async (req: Request, res: Response) => {
+    const workspace = await workspaceService.updateLogo(
+      req.params.workspaceId as string,
+      req.file,
     );
-});
+
+    return res
+      .status(StatusCode.OK)
+      .json(
+        new ApiResponse(
+          StatusCode.OK,
+          workspace,
+          "Workspace logo updated successfully.",
+        ),
+      );
+  },
+);

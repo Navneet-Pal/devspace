@@ -36,6 +36,8 @@ export const WorkspaceTaskSection = ({
 
   const [priority, setPriority] = useState<TaskPriority | "ALL">("ALL");
 
+  const [search, setSearch] = useState("");
+
   const user = useAuthStore((state) => state.user);
 
   const {
@@ -113,6 +115,8 @@ export const WorkspaceTaskSection = ({
   }, [projects]);
 
   const filteredTasks = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
     return tasks.filter((task) => {
       const matchesProject = !projectId || task.projectId === projectId;
 
@@ -120,9 +124,29 @@ export const WorkspaceTaskSection = ({
 
       const matchesPriority = priority === "ALL" || task.priority === priority;
 
-      return matchesProject && matchesStatus && matchesPriority;
+      const matchesSearch =
+        !normalizedSearch ||
+        task.title.toLowerCase().includes(normalizedSearch) ||
+        task.description?.toLowerCase().includes(normalizedSearch);
+
+      return (
+        matchesProject && matchesStatus && matchesPriority && matchesSearch
+      );
     });
-  }, [tasks, projectId, status, priority]);
+  }, [tasks, projectId, status, priority, search]);
+
+  const clearFilters = () => {
+    setProjectId("");
+    setStatus("ALL");
+    setPriority("ALL");
+    setSearch("");
+  };
+
+  const hasFilters =
+    !!search.trim() ||
+    projectId !== "" ||
+    status !== "ALL" ||
+    priority !== "ALL";
 
   if (isTasksLoading || isProjectsLoading) {
     return (
@@ -159,26 +183,54 @@ export const WorkspaceTaskSection = ({
         <CreateTaskDialog workspaceId={workspaceId} projects={projects} />
       </div>
 
-      {/* Filters */}
+      {/* Filters + Search */}
       <TaskFilters
+        search={search}
         projectId={projectId}
         projects={projects}
         status={status}
         priority={priority}
+        onSearchChange={setSearch}
         onProjectChange={setProjectId}
         onStatusChange={setStatus}
         onPriorityChange={setPriority}
       />
 
-      {/* Empty State */}
+      {/* Result summary */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Showing{" "}
+          <span className="font-medium text-foreground">
+            {filteredTasks.length}
+          </span>{" "}
+          of <span className="font-medium text-foreground">{tasks.length}</span>{" "}
+          tasks
+        </p>
+
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
+      {/* Empty / Filtered State */}
       {filteredTasks.length === 0 ? (
         <Card>
           <CardContent className="flex min-h-[250px] items-center justify-center">
             <div className="text-center">
-              <p className="text-sm font-medium">No tasks found</p>
+              <p className="text-sm font-medium">
+                {tasks.length === 0 ? "No tasks yet" : "No tasks found"}
+              </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Create a task or adjust your filters.
+                {tasks.length === 0
+                  ? "Create a task to start organizing work."
+                  : "Try changing your search or filters."}
               </p>
             </div>
           </CardContent>

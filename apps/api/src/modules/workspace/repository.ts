@@ -1,6 +1,12 @@
 import { ClientSession, Types } from "mongoose";
+
 import { Workspace } from "./model.js";
-import { CreateWorkspaceData, IWorkspaceLogo, UpdateWorkspaceDTO } from "./types.js";
+
+import {
+  CreateWorkspaceData,
+  IWorkspaceLogo,
+  UpdateWorkspaceDTO,
+} from "./types.js";
 
 class WorkspaceRepository {
   async create(data: CreateWorkspaceData, session?: ClientSession) {
@@ -37,6 +43,54 @@ class WorkspaceRepository {
     });
   }
 
+  async findByUserId(userId: string | Types.ObjectId) {
+    return Workspace.aggregate([
+      {
+        $match: {
+          deletedAt: null,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "workspacemembers",
+          localField: "_id",
+          foreignField: "workspaceId",
+          as: "memberships",
+        },
+      },
+
+      {
+        $match: {
+          $or: [
+            {
+              ownerId: userId,
+            },
+            {
+              memberships: {
+                $elemMatch: {
+                  userId,
+                },
+              },
+            },
+          ],
+        },
+      },
+
+      {
+        $project: {
+          memberships: 0,
+        },
+      },
+
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+    ]);
+  }
+
   async update(
     workspaceId: string | Types.ObjectId,
     data: UpdateWorkspaceDTO,
@@ -47,7 +101,9 @@ class WorkspaceRepository {
         _id: workspaceId,
         deletedAt: null,
       },
-      data,
+      {
+        $set: data,
+      },
       {
         new: true,
         runValidators: true,
@@ -66,7 +122,9 @@ class WorkspaceRepository {
         deletedAt: null,
       },
       {
-        deletedAt: new Date(),
+        $set: {
+          deletedAt: new Date(),
+        },
       },
       {
         new: true,
@@ -79,12 +137,28 @@ class WorkspaceRepository {
     return Workspace.findByIdAndDelete(workspaceId);
   }
 
-  async updateLogo(workspaceId : string | Types.ObjectId , logo : IWorkspaceLogo, session? : ClientSession){
-    return Workspace.findByIdAndUpdate({ _id : workspaceId , deleteAt : null }, {logo}, {new : true , runValidators : true , session})
+  async updateLogo(
+    workspaceId: string | Types.ObjectId,
+    avatar: IWorkspaceLogo,
+    session?: ClientSession,
+  ) {
+    return Workspace.findOneAndUpdate(
+      {
+        _id: workspaceId,
+        deletedAt: null,
+      },
+      {
+        $set: {
+          avatar,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        session,
+      },
+    );
   }
-
-
-
 }
 
 export const workspaceRepository = new WorkspaceRepository();

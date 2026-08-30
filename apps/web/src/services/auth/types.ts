@@ -1,6 +1,5 @@
 import { ApiResponse } from "@/types/apiTypes";
 
-
 export interface User {
   _id: string;
   name: string;
@@ -17,29 +16,29 @@ export interface RegisterRequest {
 
 export type RegisterResponse = ApiResponse<User>;
 
-export interface VerifyEmailResponse{
-  success : boolean;
-  message : string;
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
 }
 
-export interface LoginRequest{
-  email : string;
-  password : string;
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
-export interface AuthUser{
-  _id : string;
-  name : string;
-  email : string;
+export interface AuthUser {
+  _id: string;
+  name: string;
+  email: string;
   avatar?: string;
-  isVerified : boolean;
+  isVerified: boolean;
 }
 
-export interface LoginResponse{
-  success : boolean;
-  message : string;
+export interface LoginResponse {
+  success: boolean;
+  message: string;
   user: AuthUser;
-  accessToken : string;
+  accessToken: string;
 }
 
 export interface RefreshData {
@@ -48,12 +47,27 @@ export interface RefreshData {
 }
 
 export type RefreshResponse = ApiResponse<RefreshData>;
+
 export type LogoutResponse = ApiResponse<null>;
 
-export type  ForgotPasswordResponse = ApiResponse<null>;
+export type ForgotPasswordResponse = ApiResponse<null>;
+
 export type ResetPasswordResponse = ApiResponse<null>;
 
-export interface ResetPasswordRequest{
-  token : string;
-  password : string;
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+}
+
+export type UpdateProfileResponse = ApiResponse<AuthUser>;
+
+export interface UpdateAvatarResponse {
+  success: boolean;
+  message: string;
+  data: AuthUser;
 }

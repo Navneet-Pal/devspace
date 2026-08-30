@@ -4,34 +4,7 @@ import { SearchBar } from "@/components/common/SearchBar";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { CreateWorkspaceDialog } from "./create-workspace/CreateWorkspaceDialog";
 import { useMyWorkspaces } from "@/hooks/workspace/useWorkspace";
-
-// const workspaces = [
-//   {
-//     id: "1",
-//     name: "DevSpace",
-//     description: "Modern collaboration platform for development teams.",
-//     memberCount: 12,
-//     role: "Owner" as const,
-//     plan: "Pro" as const,
-//   },
-//   {
-//     id: "2",
-//     name: "Personal Workspace",
-//     description: "Personal projects and experiments.",
-//     memberCount: 4,
-//     role: "Admin" as const,
-//     plan: "Free" as const,
-//   },
-//   {
-//     id: "3",
-//     name: "Open Source",
-//     description: "Community driven development workspace.",
-//     memberCount: 28,
-//     role: "Member" as const,
-//     plan: "Enterprise" as const,
-//   },
-// ];
-
+  
 export const WorkspaceList = () => {
   const { data: response, isLoading, isError, refetch } = useMyWorkspaces();
 

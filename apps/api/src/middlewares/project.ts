@@ -4,7 +4,6 @@ import { StatusCode } from "../constants/statusCode.js";
 import { ApiError } from "../utils/ApiError.js";
 
 import { projectRepository } from "../modules/project/repository.js";
-import { projectMemberRepository } from "../modules/projectMember/repository.js";
 
 export const projectMiddleware = async (
   req: Request,
@@ -12,7 +11,6 @@ export const projectMiddleware = async (
   next: NextFunction,
 ) => {
   const workspaceId = req.params.workspaceId as string;
-
   const projectId = req.params.projectId as string;
 
   const project = await projectRepository.findById(projectId);
@@ -28,19 +26,16 @@ export const projectMiddleware = async (
     );
   }
 
-  const projectMember = await projectMemberRepository.findByProjectAndUser(
-    projectId,
-    req.user._id,
-  );
-
-  if (!projectMember) {
-    throw new ApiError(
-      StatusCode.FORBIDDEN,
-      "You are not a member of this project.",
-    );
-  }
-
-  req.projectMember = projectMember;
+  /*
+   * Project membership is intentionally NOT required here.
+   *
+   * A workspace member can open/access a project that belongs
+   * to their workspace. Project-level permissions are handled
+   * separately by projectAuthorize().
+   *
+   * This keeps project existence/ownership validation separate
+   * from project-level authorization.
+   */
   req.project = project;
 
   next();

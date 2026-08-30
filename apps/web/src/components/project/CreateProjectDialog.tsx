@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useCreateProject } from "@/hooks/project/useProject";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 import { projectKeys } from "@/services/project/keys";
+
+import { useAuthStore } from "@/store/auth";
 
 interface CreateProjectDialogProps {
   workspaceId: string;
@@ -30,13 +33,25 @@ export const CreateProjectDialog = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
+  const user = useAuthStore((state) => state.user);
+
   const createProject = useCreateProject();
   const queryClient = useQueryClient();
+
+  const { data: membersData, isLoading: isMembersLoading } =
+    useWorkspaceMembers(workspaceId);
+
+  const currentMember = user
+    ? membersData?.data?.find((member) => member.userId._id === user._id)
+    : undefined;
+
+  const canCreateProject =
+    currentMember?.role === "OWNER" || currentMember?.role === "ADMIN";
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!name.trim()) {
+    if (!canCreateProject || !name.trim()) {
       return;
     }
 
@@ -61,6 +76,12 @@ export const CreateProjectDialog = ({
       },
     );
   };
+
+  // Do not expose the create-project action
+  // while permission information is unavailable.
+  if (isMembersLoading || !canCreateProject) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

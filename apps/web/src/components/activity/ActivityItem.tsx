@@ -1,9 +1,13 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, CalendarDays, Circle, User } from "lucide-react";
+import { ArrowRight, CalendarDays } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 
 import type { Activity } from "@/services/activity/types";
 
@@ -20,16 +24,24 @@ const getInitials = (name: string) => {
     .toUpperCase();
 };
 
-const getStringValue = (value: unknown): string | null => {
-  return typeof value === "string" ? value : null;
+const getStringValue = (
+  value: unknown,
+): string | null => {
+  return typeof value === "string"
+    ? value
+    : null;
 };
 
-const getActivityMessage = (activity: Activity) => {
+const getActivityMessage = (
+  activity: Activity,
+) => {
   const actor = activity.actorId.name;
 
   switch (activity.type) {
     case "TASK_CREATED": {
-      const title = getStringValue(activity.metadata.title);
+      const title = getStringValue(
+        activity.metadata.title,
+      );
 
       return title
         ? `${actor} created task "${title}"`
@@ -40,20 +52,30 @@ const getActivityMessage = (activity: Activity) => {
       return `${actor} updated a task`;
 
     case "TASK_STATUS_CHANGED": {
-      const from = getStringValue(activity.metadata.from);
+      const from = getStringValue(
+        activity.metadata.from,
+      );
 
-      const to = getStringValue(activity.metadata.to);
+      const to = getStringValue(
+        activity.metadata.to,
+      );
 
       if (from && to) {
         return (
           <span className="flex items-center gap-1.5">
-            <span>{actor} changed status</span>
+            <span>
+              {actor} changed status
+            </span>
 
-            <span className="font-medium">{from}</span>
+            <span className="font-medium">
+              {from}
+            </span>
 
             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
 
-            <span className="font-medium">{to}</span>
+            <span className="font-medium">
+              {to}
+            </span>
           </span>
         );
       }
@@ -62,20 +84,30 @@ const getActivityMessage = (activity: Activity) => {
     }
 
     case "TASK_PRIORITY_CHANGED": {
-      const from = getStringValue(activity.metadata.from);
+      const from = getStringValue(
+        activity.metadata.from,
+      );
 
-      const to = getStringValue(activity.metadata.to);
+      const to = getStringValue(
+        activity.metadata.to,
+      );
 
       if (from && to) {
         return (
           <span className="flex items-center gap-1.5">
-            <span>{actor} changed priority</span>
+            <span>
+              {actor} changed priority
+            </span>
 
-            <span className="font-medium">{from}</span>
+            <span className="font-medium">
+              {from}
+            </span>
 
             <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
 
-            <span className="font-medium">{to}</span>
+            <span className="font-medium">
+              {to}
+            </span>
           </span>
         );
       }
@@ -83,9 +115,8 @@ const getActivityMessage = (activity: Activity) => {
       return `${actor} changed task priority`;
     }
 
-    case "TASK_ASSIGNED": {
+    case "TASK_ASSIGNED":
       return `${actor} assigned a task`;
-    }
 
     case "TASK_UNASSIGNED":
       return `${actor} unassigned a task`;
@@ -94,7 +125,9 @@ const getActivityMessage = (activity: Activity) => {
       return `${actor} moved a task`;
 
     case "TASK_DELETED": {
-      const title = getStringValue(activity.metadata.title);
+      const title = getStringValue(
+        activity.metadata.title,
+      );
 
       return title
         ? `${actor} deleted task "${title}"`
@@ -122,15 +155,132 @@ const getActivityMessage = (activity: Activity) => {
     case "MEMBER_REMOVED":
       return `${actor} removed a project member`;
 
-    case "MEMBER_ROLE_CHANGED":
+    case "MEMBER_ROLE_CHANGED": {
+      const from = getStringValue(
+        activity.metadata.from,
+      );
+
+      const to = getStringValue(
+        activity.metadata.to,
+      );
+
+      if (from && to) {
+        return (
+          <span className="flex items-center gap-1.5">
+            <span>
+              {actor} changed member role
+            </span>
+
+            <span className="font-medium">
+              {from}
+            </span>
+
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+
+            <span className="font-medium">
+              {to}
+            </span>
+          </span>
+        );
+      }
+
       return `${actor} changed a member's role`;
+    }
+
+    case "DOCUMENT_CREATED": {
+      const title = getStringValue(
+        activity.metadata.title,
+      );
+
+      return title
+        ? `${actor} created document "${title}"`
+        : `${actor} created a document`;
+    }
+
+    case "DOCUMENT_UPDATED": {
+      const changes = activity.metadata.changes;
+
+      if (
+        changes &&
+        typeof changes === "object" &&
+        "title" in changes
+      ) {
+        const titleChange = (
+          changes as {
+            title?: {
+              from?: string;
+              to?: string;
+            };
+          }
+        ).title;
+
+        if (
+          titleChange?.from &&
+          titleChange?.to
+        ) {
+          return (
+            <span className="flex items-center gap-1.5">
+              <span>
+                {actor} renamed document
+              </span>
+
+              <span className="font-medium">
+                {titleChange.from}
+              </span>
+
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+
+              <span className="font-medium">
+                {titleChange.to}
+              </span>
+            </span>
+          );
+        }
+      }
+
+      return `${actor} updated a document`;
+    }
+
+    case "DOCUMENT_DELETED": {
+      const title = getStringValue(
+        activity.metadata.title,
+      );
+
+      return title
+        ? `${actor} deleted document "${title}"`
+        : `${actor} deleted a document`;
+    }
+
+    case "FILE_UPLOADED": {
+      const fileName =
+        getStringValue(
+          activity.metadata.fileName,
+        );
+
+      return fileName
+        ? `${actor} uploaded file "${fileName}"`
+        : `${actor} uploaded a file`;
+    }
+
+    case "FILE_DELETED": {
+      const fileName =
+        getStringValue(
+          activity.metadata.fileName,
+        );
+
+      return fileName
+        ? `${actor} deleted file "${fileName}"`
+        : `${actor} deleted a file`;
+    }
 
     default:
       return `${actor} performed an activity`;
   }
 };
 
-export const ActivityItem = ({ activity }: ActivityItemProps) => {
+export const ActivityItem = ({
+  activity,
+}: ActivityItemProps) => {
   return (
     <div className="relative flex gap-3">
       <div className="relative flex shrink-0 flex-col items-center">
@@ -142,7 +292,11 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
             />
           )}
 
-          <AvatarFallback>{getInitials(activity.actorId.name)}</AvatarFallback>
+          <AvatarFallback>
+            {getInitials(
+              activity.actorId.name,
+            )}
+          </AvatarFallback>
         </Avatar>
 
         <div className="mt-2 h-2 w-2 rounded-full bg-muted-foreground/40" />
@@ -157,9 +311,14 @@ export const ActivityItem = ({ activity }: ActivityItemProps) => {
           <CalendarDays className="h-3.5 w-3.5" />
 
           <span>
-            {formatDistanceToNow(new Date(activity.createdAt), {
-              addSuffix: true,
-            })}
+            {formatDistanceToNow(
+              new Date(
+                activity.createdAt,
+              ),
+              {
+                addSuffix: true,
+              },
+            )}
           </span>
         </div>
       </div>

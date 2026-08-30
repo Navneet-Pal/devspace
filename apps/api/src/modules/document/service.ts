@@ -38,7 +38,7 @@ class DocumentService {
       ACTIVITY_TYPE.DOCUMENT_CREATED,
       {
         documentId: document._id.toString(),
-        title: document.title,
+        documentTitle: document.title,
       },
     );
 
@@ -107,6 +107,7 @@ class DocumentService {
         ACTIVITY_TYPE.DOCUMENT_UPDATED,
         {
           documentId,
+          documentTitle: document.title,
           changes: {
             ...(titleChanged && {
               title: {
@@ -153,7 +154,7 @@ class DocumentService {
       ACTIVITY_TYPE.DOCUMENT_DELETED,
       {
         documentId,
-        title: document.title,
+        documentTitle: document.title,
       },
     );
 

@@ -12,7 +12,7 @@ export const createDocument = asyncHandler(
       req.params.workspaceId as string,
       req.params.projectId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role,
       req.body,
     );
 
@@ -72,7 +72,7 @@ export const updateDocument = asyncHandler(
       req.params.projectId as string,
       req.params.documentId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role,
       req.body,
     );
 
@@ -95,7 +95,7 @@ export const deleteDocument = asyncHandler(
       req.params.projectId as string,
       req.params.documentId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role,
     );
 
     return res

@@ -7,20 +7,15 @@ import { File as FileIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { useProjectMembers } from "@/hooks/projectMember/useProjectMember";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 import { useDeleteProjectFile, useProjectFiles } from "@/hooks/file/useFile";
 
 import { fileKeys } from "@/services/file/keys";
 import { activityKeys } from "@/services/activity/keys";
 
 import type { ProjectFile } from "@/services/file/types";
-import type { ProjectRole } from "@/services/projectMember/types";
-import { useAuthStore } from "@/store/auth";
 
-import {
-  hasProjectPermission,
-  PROJECT_PERMISSION,
-} from "@/utils/projectPermission";
+import { useAuthStore } from "@/store/auth";
 
 import { FileList } from "@/components/file/FileList";
 import { FileUploadDialog } from "@/components/file/FileUploadDialog";
@@ -59,32 +54,37 @@ export default function FilesPage({ params }: FilesPageProps) {
     isError,
   } = useProjectFiles(workspaceId, projectId);
 
-  const { data: projectMembersData } = useProjectMembers(
-    workspaceId,
-    projectId,
-  );
+  const { data: workspaceMembersData, isLoading: isWorkspaceMembersLoading } =
+    useWorkspaceMembers(workspaceId);
 
   const deleteMutation = useDeleteProjectFile();
 
   const files = filesData?.data ?? [];
 
-  const projectMembers = projectMembersData?.data ?? [];
+  const workspaceMembers = workspaceMembersData?.data ?? [];
 
   const user = useAuthStore((state) => state.user);
 
   const currentMember = user
-    ? projectMembers.find((member) => member.userId._id === user._id)
+    ? workspaceMembers.find((member) => member.userId._id === user._id)
     : undefined;
 
-  const projectRole: ProjectRole | undefined = currentMember?.role;
+  const workspaceRole = currentMember?.role;
 
+  /*
+   * File permissions:
+   *
+   * OWNER  -> upload + delete
+   * ADMIN  -> upload + delete
+   * MEMBER -> upload only
+   * VIEWER -> neither upload nor delete
+   */
   const canUpload =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.FILE_UPLOAD);
+    workspaceRole === "OWNER" ||
+    workspaceRole === "ADMIN" ||
+    workspaceRole === "MEMBER";
 
-  const canDelete =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.FILE_DELETE);
+  const canDelete = workspaceRole === "OWNER" || workspaceRole === "ADMIN";
 
   const handleDelete = () => {
     if (!deleteFile || !canDelete) {
@@ -144,7 +144,7 @@ export default function FilesPage({ params }: FilesPageProps) {
             </div>
           </div>
 
-          {canUpload && (
+          {!isWorkspaceMembersLoading && canUpload && (
             <FileUploadDialog workspaceId={workspaceId} projectId={projectId} />
           )}
         </div>

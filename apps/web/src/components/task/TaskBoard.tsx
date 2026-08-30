@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   type DragEndEvent,
   useDroppable,
@@ -11,7 +11,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { Task, TaskStatus } from "@/services/task/types";
@@ -22,6 +22,9 @@ import {
   useUpdateTaskPosition,
   useUpdateTaskStatus,
 } from "@/hooks/task/useTask";
+
+import { useAuthStore } from "@/store/auth";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 
 import { TaskCard } from "./TaskCard";
 import { TaskDetailsDialog } from "./TaskDetailsDialog";
@@ -102,12 +105,64 @@ export const TaskBoard = ({
 
   const queryClient = useQueryClient();
 
+  const user = useAuthStore((state) => state.user);
+
+  const { data: workspaceMembersData } = useWorkspaceMembers(workspaceId);
+
   const updateTaskStatus = useUpdateTaskStatus();
 
   const updateTaskPosition = useUpdateTaskPosition();
 
+  const workspaceMembers = workspaceMembersData?.data ?? [];
+
+  const currentWorkspaceMember = user
+    ? workspaceMembers.find((member) => member.userId._id === user._id)
+    : undefined;
+
+  const workspaceRole = currentWorkspaceMember?.role;
+
+  const isOwner = workspaceRole === "OWNER";
+
+  const isAdmin = workspaceRole === "ADMIN";
+
+  /*
+   * Assigned tasks belonging to the
+   * currently logged-in user.
+   */
+  const assignedTaskIds = useMemo(() => {
+    if (!user) {
+      return new Set<string>();
+    }
+
+    return new Set(
+      tasks
+        .filter((task) => task.assignedTo?._id === user._id)
+        .map((task) => task._id),
+    );
+  }, [tasks, user]);
+
+  /*
+   * Owner/Admin -> every task.
+   * Member -> only assigned tasks.
+   */
+  const effectiveDraggableTaskIds =
+    isOwner || isAdmin
+      ? new Set(tasks.map((task) => task._id))
+      : assignedTaskIds;
+
+  /*
+   * A board is interactive when:
+   *
+   * OWNER/ADMIN can move tasks, or
+   * MEMBER has at least one assigned task.
+   */
+  const effectiveCanDrag =
+    isOwner || isAdmin || effectiveDraggableTaskIds.size > 0;
+
   const isDraggingDisabled =
-    !canDrag || updateTaskStatus.isPending || updateTaskPosition.isPending;
+    !effectiveCanDrag ||
+    updateTaskStatus.isPending ||
+    updateTaskPosition.isPending;
 
   const invalidateTaskQueries = (activeProjectId: string, taskId: string) => {
     queryClient.invalidateQueries({
@@ -136,11 +191,13 @@ export const TaskBoard = ({
 
     const activeTaskId = String(active.id);
 
-    if (draggableTaskIds && !draggableTaskIds.has(activeTaskId)) {
+    /*
+     * Never allow a MEMBER to move a
+     * task that isn't assigned to them.
+     */
+    if (!effectiveDraggableTaskIds.has(activeTaskId)) {
       return;
     }
-
-    const overId = String(over.id);
 
     const activeTask = tasks.find((task) => task._id === activeTaskId);
 
@@ -150,11 +207,17 @@ export const TaskBoard = ({
 
     const activeProjectId = projectId ?? activeTask.projectId;
 
-    const overTask = tasks.find((task) => task._id === overId);
+    const overId = String(over.id);
 
+    /*
+     * Determine whether the cursor is over
+     * a column or another task.
+     */
     const targetColumn = columns.find(
       (column) => getColumnId(column.status) === overId,
     );
+
+    const overTask = tasks.find((task) => task._id === overId);
 
     const newStatus =
       targetColumn?.status ?? overTask?.status ?? activeTask.status;
@@ -162,7 +225,9 @@ export const TaskBoard = ({
     const currentStatus = activeTask.status;
 
     /*
-     * Same-column reorder
+     * ------------------------------------------------
+     * SAME COLUMN
+     * ------------------------------------------------
      */
     if (!targetColumn && overTask && newStatus === currentStatus) {
       if (activeTaskId === overTask._id) {
@@ -225,7 +290,9 @@ export const TaskBoard = ({
     }
 
     /*
-     * Cross-column move
+     * ------------------------------------------------
+     * CROSS COLUMN
+     * ------------------------------------------------
      */
     if (newStatus !== currentStatus) {
       const targetColumnTasks = tasks
@@ -238,6 +305,9 @@ export const TaskBoard = ({
 
       let reorderedTasks: Task[];
 
+      /*
+       * Dropped on another task.
+       */
       if (overTask) {
         const overIndex = tasksWithoutActive.findIndex(
           (task) => task._id === overTask._id,
@@ -251,6 +321,10 @@ export const TaskBoard = ({
 
         reorderedTasks.splice(overIndex, 0, activeTask);
       } else if (targetColumn) {
+
+      /*
+       * Dropped directly on the column.
+       */
         reorderedTasks = [...tasksWithoutActive, activeTask];
       } else {
         return;
@@ -262,6 +336,9 @@ export const TaskBoard = ({
         return;
       }
 
+      /*
+       * First change the status.
+       */
       updateTaskStatus.mutate(
         {
           workspaceId,
@@ -273,6 +350,9 @@ export const TaskBoard = ({
         },
         {
           onSuccess: () => {
+            /*
+             * Then update the position.
+             */
             updateTaskPosition.mutate(
               {
                 workspaceId,
@@ -311,7 +391,7 @@ export const TaskBoard = ({
 
   return (
     <>
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <div className="grid gap-4 xl:grid-cols-4">
           {columns.map((column) => {
             const columnTasks = tasks
@@ -327,8 +407,8 @@ export const TaskBoard = ({
                 showProject={showProject}
                 projectNames={projectNames}
                 onTaskClick={setSelectedTask}
-                canDrag={canDrag}
-                draggableTaskIds={draggableTaskIds}
+                canDrop={effectiveCanDrag}
+                draggableTaskIds={effectiveDraggableTaskIds}
               />
             );
           })}
@@ -359,8 +439,8 @@ interface TaskColumnProps {
   showProject: boolean;
   projectNames: Record<string, string>;
   onTaskClick: (task: Task) => void;
-  canDrag: boolean;
-  draggableTaskIds?: Set<string>;
+  canDrop: boolean;
+  draggableTaskIds: Set<string>;
 }
 
 const TaskColumn = ({
@@ -370,19 +450,28 @@ const TaskColumn = ({
   showProject,
   projectNames,
   onTaskClick,
-  canDrag,
+  canDrop,
   draggableTaskIds,
 }: TaskColumnProps) => {
+  /*
+   * IMPORTANT:
+   *
+   * Columns are always valid drop zones whenever
+   * the current user has at least one draggable task.
+   *
+   * This is what allows a workspace MEMBER to
+   * drag their task into another column.
+   */
   const { setNodeRef, isOver } = useDroppable({
     id: getColumnId(status),
-    disabled: !canDrag,
+    disabled: !canDrop,
   });
 
   return (
     <div
       ref={setNodeRef}
       className={`min-w-0 rounded-xl border bg-card/50 transition-all duration-200 ${
-        canDrag && isOver
+        canDrop && isOver
           ? "border-primary bg-primary/10 shadow-sm"
           : "border-border/70"
       }`}
@@ -398,7 +487,6 @@ const TaskColumn = ({
         </div>
       </div>
 
-      {/* Sortable Tasks */}
       <SortableContext
         items={tasks.map((task) => task._id)}
         strategy={verticalListSortingStrategy}
@@ -407,13 +495,13 @@ const TaskColumn = ({
           {tasks.length === 0 ? (
             <div
               className={`flex min-h-[140px] items-center justify-center rounded-lg border border-dashed transition-colors ${
-                canDrag && isOver
+                canDrop && isOver
                   ? "border-primary/60 bg-primary/5"
                   : "border-border/60"
               }`}
             >
               <p className="text-xs text-muted-foreground">
-                {canDrag ? "Drop tasks here" : "No tasks"}
+                {canDrop ? "Drop tasks here" : "No tasks"}
               </p>
             </div>
           ) : (
@@ -424,9 +512,11 @@ const TaskColumn = ({
                 showProject={showProject}
                 projectName={projectNames[task.projectId]}
                 onClick={onTaskClick}
-                disabled={
-                  draggableTaskIds ? !draggableTaskIds.has(task._id) : !canDrag
-                }
+                /*
+                 * Only assigned tasks for MEMBER,
+                 * all tasks for OWNER/ADMIN.
+                 */
+                disabled={!draggableTaskIds.has(task._id)}
               />
             ))
           )}

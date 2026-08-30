@@ -7,9 +7,10 @@ import { ApiError } from "../../utils/ApiError.js";
 import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { projectRepository } from "../project/repository.js";
 import { activityService } from "../activity/service.js";
-import { ACTIVITY_TYPE } from "../activity/types.js";
+import { ACTIVITY_TYPE } from "../activity/types.js"; 
 
-import { projectMemberRepository } from "./repository.js";
+import { projectMemberRepository } from "./repository.js"; 
+import { userRepository } from "../user/respository.js";
 
 class ProjectMemberService {
   async getProjectMembers(workspaceId: string, projectId: string) {
@@ -63,6 +64,12 @@ class ProjectMemberService {
       );
     }
 
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new ApiError(StatusCode.NOT_FOUND, "User not found.");
+    }
+
     const member = await projectMemberRepository.create({
       projectId: new Types.ObjectId(projectId),
       userId: new Types.ObjectId(userId),
@@ -77,6 +84,7 @@ class ProjectMemberService {
       {
         memberId: member._id.toString(),
         userId,
+        memberName: user.name,
         role,
       },
     );
@@ -117,6 +125,12 @@ class ProjectMemberService {
       );
     }
 
+    const user = await userRepository.findById(member.userId.toString());
+
+    if (!user) {
+      throw new ApiError(StatusCode.NOT_FOUND, "User not found.");
+    }
+
     const previousRole = member.role;
 
     const updatedMember = await projectMemberRepository.updateRole(memberId, {
@@ -131,6 +145,7 @@ class ProjectMemberService {
       {
         memberId,
         userId: member.userId.toString(),
+        memberName: user.name,
         from: previousRole,
         to: role,
       },
@@ -164,6 +179,12 @@ class ProjectMemberService {
       throw new ApiError(StatusCode.BAD_REQUEST, "Invalid project member.");
     }
 
+    const user = await userRepository.findById(member.userId.toString());
+
+    if (!user) {
+      throw new ApiError(StatusCode.NOT_FOUND, "User not found.");
+    }
+
     await projectMemberRepository.delete(memberId);
 
     await activityService.record(
@@ -174,6 +195,7 @@ class ProjectMemberService {
       {
         memberId,
         userId: member.userId.toString(),
+        memberName: user.name,
         role: member.role,
       },
     );

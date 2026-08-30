@@ -1,6 +1,9 @@
 import { ClientSession, Types } from "mongoose";
+
 import { Role } from "../../constants/roles.js";
+
 import { workspaceInvitation } from "./model.js";
+
 import { INVITATION_STATUS, InvitationStatus } from "./types.js";
 
 class WorkspaceInvitationRepository {
@@ -12,7 +15,17 @@ class WorkspaceInvitationRepository {
     session?: ClientSession,
   ) {
     return workspaceInvitation
-      .create([{ workspaceId, userId, invitedBy, role }], { session })
+      .create(
+        [
+          {
+            workspaceId,
+            userId,
+            invitedBy,
+            role,
+          },
+        ],
+        { session },
+      )
       .then((result) => result[0]);
   }
 
@@ -21,7 +34,19 @@ class WorkspaceInvitationRepository {
   }
 
   async findByWorkspaceId(workspaceId: string | Types.ObjectId) {
-    return workspaceInvitation.find({ workspaceId }).populate("userId","name email avatar").sort({ createdAt: -1 });
+    return workspaceInvitation
+      .find({ workspaceId })
+      .populate({
+        path: "userId",
+        select: "_id name email avatar",
+      })
+      .populate({
+        path: "invitedBy",
+        select: "_id name email avatar",
+      })
+      .sort({
+        createdAt: -1,
+      });
   }
 
   async findPendingInvitation(
@@ -36,25 +61,60 @@ class WorkspaceInvitationRepository {
   }
 
   async findByUserId(userId: string | Types.ObjectId) {
-    return workspaceInvitation.find({ userId }).sort({ createdAt: -1 });
+    return workspaceInvitation
+      .find({ userId })
+      .populate({
+        path: "workspaceId",
+        select: "_id name avatar",
+      })
+      .populate({
+        path: "invitedBy",
+        select: "_id name email avatar",
+      })
+      .sort({
+        createdAt: -1,
+      });
   }
 
-  async delete(invitationId: string | Types.ObjectId, session?: ClientSession) {
-    return workspaceInvitation.findByIdAndDelete(invitationId, { session });
+  async updateStatus(
+    invitationId: string | Types.ObjectId,
+    status: InvitationStatus,
+    session?: ClientSession,
+  ) {
+    return workspaceInvitation.findOneAndUpdate(
+      {
+        _id: invitationId,
+      },
+      {
+        $set: {
+          status,
+        },
+      },
+      {
+        new: true,
+        session,
+      },
+    );
   }
 
   async exists(
     workspaceId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
   ) {
-    return workspaceInvitation.exists({ workspaceId, userId });
+    return workspaceInvitation.exists({
+      workspaceId,
+      userId,
+    });
   }
 
   async findByWorkspaceAndUser(
     workspaceId: string | Types.ObjectId,
     userId: string | Types.ObjectId,
   ) {
-    return workspaceInvitation.findOne({ workspaceId, userId });
+    return workspaceInvitation.findOne({
+      workspaceId,
+      userId,
+    });
   }
 }
 

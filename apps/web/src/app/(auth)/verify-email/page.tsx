@@ -4,7 +4,7 @@ import AuthCard from "@/components/auth/AuthCard";
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Logo from "@/components/common/Logo";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft, MailCheck, RotateCw } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthHeader from "@/components/auth/AuthHeader";
 import Logo from "@/components/common/Logo";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 
 import { useVerifyEmail } from "@/hooks/auth/useVerifyEmail";
 

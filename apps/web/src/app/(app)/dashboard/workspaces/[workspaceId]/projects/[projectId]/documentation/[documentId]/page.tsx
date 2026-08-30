@@ -24,7 +24,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { useAuthStore } from "@/store/auth";
 
-import { useProjectMembers } from "@/hooks/projectMember/useProjectMember";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
+
 import {
   useDeleteDocument,
   useDocument,
@@ -33,13 +34,6 @@ import {
 
 import { documentKeys } from "@/services/document/keys";
 import { activityKeys } from "@/services/activity/keys";
-
-import type { ProjectRole } from "@/services/projectMember/types";
-
-import {
-  hasProjectPermission,
-  PROJECT_PERMISSION,
-} from "@/utils/projectPermission";
 
 interface DocumentPageProps {
   params: Promise<{
@@ -64,38 +58,37 @@ export default function DocumentPage({ params }: DocumentPageProps) {
 
   const user = useAuthStore((state) => state.user);
 
-  const { data: projectMembersData } = useProjectMembers(
-    workspaceId,
-    projectId,
-  );
+  const { data: workspaceMembersData, isLoading: isWorkspaceMembersLoading } =
+    useWorkspaceMembers(workspaceId);
 
-  const { data, isLoading, isError } = useDocument(
-    workspaceId,
-    projectId,
-    documentId,
-  );
+  const {
+    data,
+    isLoading: isDocumentLoading,
+    isError,
+  } = useDocument(workspaceId, projectId, documentId);
 
   const updateDocument = useUpdateDocument();
-
   const deleteDocument = useDeleteDocument();
 
   const document = data?.data;
 
-  const projectMembers = projectMembersData?.data ?? [];
+  const workspaceMembers = workspaceMembersData?.data ?? [];
 
-  const currentProjectMember = user
-    ? projectMembers.find((member) => member.userId._id === user._id)
+  const currentWorkspaceMember = user
+    ? workspaceMembers.find((member) => member.userId._id === user._id)
     : undefined;
 
-  const projectRole: ProjectRole | undefined = currentProjectMember?.role;
+  /*
+   * Every workspace member can create/edit documentation.
+   */
+  const canEditDocument = !!currentWorkspaceMember;
 
-  const canEditDocument =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.DOCUMENT_UPDATE);
-
+  /*
+   * Only OWNER / ADMIN can delete documentation.
+   */
   const canDeleteDocument =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.DOCUMENT_DELETE);
+    currentWorkspaceMember?.role === "OWNER" ||
+    currentWorkspaceMember?.role === "ADMIN";
 
   const startEditing = () => {
     if (!document || !canEditDocument) {
@@ -193,7 +186,7 @@ export default function DocumentPage({ params }: DocumentPageProps) {
     );
   };
 
-  if (isLoading) {
+  if (isDocumentLoading || isWorkspaceMembersLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading document...</p>

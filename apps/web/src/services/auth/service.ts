@@ -1,6 +1,7 @@
 import { axiosInstance } from "@/lib/axios";
+
 import {
-  ForgotPasswordResponse, 
+  ForgotPasswordResponse,
   LoginRequest,
   LoginResponse,
   LogoutResponse,
@@ -10,7 +11,11 @@ import {
   ResetPasswordRequest,
   ResetPasswordResponse,
   VerifyEmailResponse,
-} from "./types"; 
+  UpdateProfileRequest,
+  UpdateProfileResponse,
+  AuthUser,
+} from "./types";
+
 import { forgotPasswordValues } from "@/schemas/auth";
 
 class AuthService {
@@ -32,31 +37,71 @@ class AuthService {
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await axiosInstance.post("auth/login", data);
+    const response = await axiosInstance.post<LoginResponse>(
+      "auth/login",
+      data,
+    );
 
     return response.data;
   }
 
   async refresh(): Promise<RefreshResponse> {
-    const response = await axiosInstance.post("/auth/refresh");
+    const response = await axiosInstance.post<RefreshResponse>("/auth/refresh");
 
     return response.data;
   }
 
-  async logout():Promise<LogoutResponse >{
-    const response = await axiosInstance.post("/auth/logout");
+  async logout(): Promise<LogoutResponse> {
+    const response = await axiosInstance.post<LogoutResponse>("/auth/logout");
 
     return response.data;
   }
 
-  async forgotPassword(data: forgotPasswordValues):Promise<ForgotPasswordResponse>{
-    const response = await axiosInstance.post("/auth/forgot-password",data);
+  async forgotPassword(
+    data: forgotPasswordValues,
+  ): Promise<ForgotPasswordResponse> {
+    const response = await axiosInstance.post<ForgotPasswordResponse>(
+      "/auth/forgot-password",
+      data,
+    );
 
     return response.data;
   }
 
-  async resetPassword(data:ResetPasswordRequest) : Promise<ResetPasswordResponse>{
-    const response = await axiosInstance.post("/auth/reset-password" , data);
+  async resetPassword(
+    data: ResetPasswordRequest,
+  ): Promise<ResetPasswordResponse> {
+    const response = await axiosInstance.post<ResetPasswordResponse>(
+      "/auth/reset-password",
+      data,
+    );
+
+    return response.data;
+  }
+
+  async updateProfile(
+    data: UpdateProfileRequest,
+  ): Promise<UpdateProfileResponse> {
+    const response = await axiosInstance.patch<UpdateProfileResponse>(
+      "/auth/me",
+      data,
+    );
+
+    return response.data;
+  }
+
+  async searchUsers(query: string): Promise<{
+    success: boolean;
+    data: AuthUser[];
+  }> {
+    const response = await axiosInstance.get<{
+      success: boolean;
+      data: AuthUser[];
+    }>("/auth/users/search", {
+      params: {
+        q: query,
+      },
+    });
 
     return response.data;
   }

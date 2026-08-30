@@ -2,10 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { ApiError } from "../utils/ApiError.js";
 import { env } from "../config/env.js";
 import jwt from "jsonwebtoken";
-import { IJwtPayload } from "../types/jwt.js";
-import { UserRespository } from "../modules/user/respository.js";
-
-const userRespository = new UserRespository();
+import { IJwtPayload } from "../types/jwt.js"; 
+import { userRepository } from "../modules/user/respository.js";
 
 export const authenticate = async (
   req: Request,
@@ -22,7 +20,7 @@ export const authenticate = async (
 
   const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as IJwtPayload;
 
-  const user = await userRespository.findById(decoded.userId);
+  const user = await userRepository.findById(decoded.userId);
 
   if (!user) {
     throw new ApiError(401, "Unauthorized");

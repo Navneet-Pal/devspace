@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
+
 import { IWorkspace } from "./types.js";
-import { WORKSPACE_DESCRIPTION, WORKSPACE_NAME, WORKSPACE_SLUG } from "./constants.js";
+import {
+  WORKSPACE_DESCRIPTION,
+  WORKSPACE_NAME,
+  WORKSPACE_SLUG,
+} from "./constants.js";
 
 const WorkspaceSchema = new mongoose.Schema(
   {
@@ -26,12 +31,20 @@ const WorkspaceSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: WORKSPACE_DESCRIPTION.MAX_LENGTH,
+      default: "",
     },
 
-    avatar : {
-      publicId : {type : String,},
-      url : {type : String,}
-    }, 
+    avatar: {
+      publicId: {
+        type: String,
+        default: null,
+      },
+
+      url: {
+        type: String,
+        default: null,
+      },
+    },
 
     ownerId: {
       type: Schema.Types.ObjectId,
@@ -39,10 +52,17 @@ const WorkspaceSchema = new mongoose.Schema(
       ref: "User",
     },
 
-    deleteAt : {
-      type:Date,
-      default : null,
-    }
+    /*
+     * Soft-delete timestamp.
+     *
+     * Keep this name consistent everywhere:
+     * repository, service and queries all use
+     * `deletedAt`.
+     */
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -50,9 +70,24 @@ const WorkspaceSchema = new mongoose.Schema(
   },
 );
 
+/*
+ * Indexes
+ */
 WorkspaceSchema.index({ slug: 1 }, { unique: true });
-WorkspaceSchema.index({ ownerId: 1 });
-WorkspaceSchema.index({ deletedAt: 1 });
-WorkspaceSchema.index({ createdAt: -1 });
 
-export const Workspace = mongoose.model<IWorkspace>("Workspace" , WorkspaceSchema);
+WorkspaceSchema.index({
+  ownerId: 1,
+});
+
+WorkspaceSchema.index({
+  deletedAt: 1,
+});
+
+WorkspaceSchema.index({
+  createdAt: -1,
+});
+
+export const Workspace = mongoose.model<IWorkspace>(
+  "Workspace",
+  WorkspaceSchema,
+);

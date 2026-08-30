@@ -1,10 +1,10 @@
 import { ApiError } from "../../utils/ApiError.js";
-import { UserRespository } from "../user/respository.js";
+import { UserRepository } from "../user/respository.js";
 import { VerificationRepository } from "./respository.js";
 
 export class VerificationService{
     private verificationRepository = new VerificationRepository;
-    private userRepository = new UserRespository;
+    private userRepository = new UserRepository;
 
     async verifyEmail(token:string){
         const verificationToken = await this.verificationRepository.findByToken(token);

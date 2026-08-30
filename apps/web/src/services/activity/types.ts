@@ -16,7 +16,12 @@ export type ActivityType =
   | "COMMENT_DELETED"
   | "MEMBER_ADDED"
   | "MEMBER_REMOVED"
-  | "MEMBER_ROLE_CHANGED";
+  | "MEMBER_ROLE_CHANGED"
+  | "DOCUMENT_CREATED"
+  | "DOCUMENT_UPDATED"
+  | "DOCUMENT_DELETED"
+  | "FILE_UPLOADED"
+  | "FILE_DELETED";
 
 export interface ActivityActor {
   _id: string;

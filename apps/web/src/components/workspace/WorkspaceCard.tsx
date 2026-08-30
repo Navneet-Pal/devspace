@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+
 import { useWorkspaceStore } from "@/store/workspace";
 
 interface WorkspaceCardProps {
@@ -21,13 +22,16 @@ export const WorkspaceCard = ({
   logo,
 }: WorkspaceCardProps) => {
   const router = useRouter();
-  
-  const setCurrentWorkspace = useWorkspaceStore( (state) => state.setCurrentWorkspace );
 
-  const handleSelect =()=>{
+  const setCurrentWorkspace = useWorkspaceStore(
+    (state) => state.setCurrentWorkspace,
+  );
+
+  const handleSelect = () => {
     setCurrentWorkspace(id);
-    router.push(`/dashboard?workspace=${id}`);
-  }
+
+    router.push(`/dashboard/workspaces/${id}`);
+  };
 
   return (
     <Card

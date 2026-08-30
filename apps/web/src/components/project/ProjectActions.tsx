@@ -13,7 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useDeleteProject } from "@/hooks/project/useProject";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
+
 import { projectKeys } from "@/services/project/keys";
+
+import { useAuthStore } from "@/store/auth";
 
 interface ProjectActionsProps {
   workspaceId: string;
@@ -27,9 +31,25 @@ export const ProjectActions = ({
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const user = useAuthStore((state) => state.user);
+
   const deleteProject = useDeleteProject();
 
+  const { data: membersData, isLoading: isMembersLoading } =
+    useWorkspaceMembers(workspaceId);
+
+  const currentMember = user
+    ? membersData?.data?.find((member) => member.userId._id === user._id)
+    : undefined;
+
+  const canManageProject =
+    currentMember?.role === "OWNER" || currentMember?.role === "ADMIN";
+
   const handleDelete = () => {
+    if (!canManageProject) {
+      return;
+    }
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this project?",
     );
@@ -59,11 +79,17 @@ export const ProjectActions = ({
     );
   };
 
+  // Do not show project-management actions
+  // until the workspace role is known.
+  if (isMembersLoading || !canManageProject) {
+    return null;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Project actions">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         }

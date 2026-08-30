@@ -26,20 +26,14 @@ import { Badge } from "@/components/ui/badge";
 
 import { useAuthStore } from "@/store/auth";
 
-import { useProjectMembers } from "@/hooks/projectMember/useProjectMember";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 import { useDeleteTask } from "@/hooks/task/useTask";
 import { useTaskComments } from "@/hooks/comment/useComment";
 
 import { commentKeys } from "@/services/comment/keys";
 import { taskKeys } from "@/services/task/keys";
 
-import type { ProjectRole } from "@/services/projectMember/types";
 import type { Task } from "@/services/task/types";
-
-import {
-  hasProjectPermission,
-  PROJECT_PERMISSION,
-} from "@/utils/projectPermission";
 
 import { EditTaskDialog } from "./EditTaskDialog";
 
@@ -92,10 +86,7 @@ export const TaskDetailsDialog = ({
 
   const user = useAuthStore((state) => state.user);
 
-  const { data: projectMembersData } = useProjectMembers(
-    workspaceId,
-    projectId,
-  );
+  const { data: workspaceMembersData } = useWorkspaceMembers(workspaceId);
 
   const {
     data: commentsData,
@@ -109,27 +100,22 @@ export const TaskDetailsDialog = ({
     isError: isTaskActivityError,
   } = useTaskActivity(workspaceId, projectId, task?._id ?? "");
 
-  const projectMembers = projectMembersData?.data ?? [];
+  const workspaceMembers = workspaceMembersData?.data ?? [];
   const comments = commentsData?.data ?? [];
   const taskActivities = taskActivityData?.data ?? [];
 
-  const currentProjectMember = user
-    ? projectMembers.find((member) => member.userId._id === user._id)
+  const currentWorkspaceMember = user
+    ? workspaceMembers.find((member) => member.userId._id === user._id)
     : undefined;
 
-  const projectRole: ProjectRole | undefined = currentProjectMember?.role;
+  const workspaceRole = currentWorkspaceMember?.role;
 
-  const canEditTask =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.TASK_UPDATE);
+  const isOwner = workspaceRole === "OWNER";
+  const isAdmin = workspaceRole === "ADMIN";
 
-  const canDeleteTask =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.TASK_DELETE);
-
-  const canCreateComment =
-    !!projectRole &&
-    hasProjectPermission(projectRole, PROJECT_PERMISSION.COMMENT_CREATE);
+  const canEditTask = isOwner || isAdmin;
+  const canDeleteTask = isOwner || isAdmin;
+  const canCreateComment = !!currentWorkspaceMember;
 
   const deleteTask = useDeleteTask();
 

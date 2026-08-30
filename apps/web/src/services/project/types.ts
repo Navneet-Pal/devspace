@@ -1,6 +1,6 @@
 import type { ApiResponse } from "@/types/apiTypes";
 
-export type ProjectStatus = "ACTIVE" | "ARCHIVED";
+export type ProjectStatus = "Active" | "Archived";
 
 export interface Project {
   _id: string;

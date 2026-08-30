@@ -5,9 +5,7 @@ import { use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { useProject } from "@/hooks/project/useProject";
-
-import { ProjectMembers } from "@/components/projectMember/ProjectMembers";
-import { AddProjectMemberDialog } from "@/components/projectMember/AddProjectMemberDialog";
+import { useWorkspaceMembers } from "@/hooks/workspaceMember/useWorkspaceMember";
 
 interface ProjectPageProps {
   params: Promise<{
@@ -19,16 +17,23 @@ interface ProjectPageProps {
 export default function ProjectPage({ params }: ProjectPageProps) {
   const { workspaceId, projectId } = use(params);
 
-  const { data } = useProject(workspaceId, projectId);
+  const { data: projectResponse } = useProject(workspaceId, projectId);
 
-  const project = data?.data;
+  const {
+    data: membersResponse,
+    isLoading: isMembersLoading,
+    isError: isMembersError,
+  } = useWorkspaceMembers(workspaceId);
+
+  const project = projectResponse?.data;
+  const workspaceMembers = membersResponse?.data ?? [];
 
   if (!project) {
     return null;
   }
 
   return (
-    <>
+    <div className="space-y-6">
       {/* Overview */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -38,8 +43,9 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              This is the overview of your project. Tasks, documentation, files
-              and collaboration features will appear here as the project grows.
+              This project is part of your workspace. Workspace members
+              automatically have access to the projects in this workspace
+              according to their workspace permissions.
             </p>
           </CardContent>
         </Card>
@@ -67,29 +73,67 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         </Card>
       </div>
 
-      {/* Project Members */}
+      {/* People with Access */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle>Project Members</CardTitle>
+          <CardTitle>People with access</CardTitle>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                People working on this project.
-              </p>
-            </div>
-
-            <AddProjectMemberDialog
-              workspaceId={workspaceId}
-              projectId={projectId}
-            />
-          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Workspace members who can access this project.
+          </p>
         </CardHeader>
 
         <CardContent>
-          <ProjectMembers workspaceId={workspaceId} projectId={projectId} />
+          {isMembersLoading ? (
+            <div className="flex min-h-[180px] items-center justify-center">
+              <p className="text-sm text-muted-foreground">
+                Loading people with access...
+              </p>
+            </div>
+          ) : isMembersError ? (
+            <div className="flex min-h-[180px] items-center justify-center text-center">
+              <p className="text-sm text-destructive">
+                Failed to load workspace members.
+              </p>
+            </div>
+          ) : workspaceMembers.length === 0 ? (
+            <div className="flex min-h-[180px] items-center justify-center text-center">
+              <p className="text-sm text-muted-foreground">
+                No workspace members found.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {workspaceMembers.slice(0, 5).map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {member.userId.name}
+                    </p>
+
+                    <p className="truncate text-xs text-muted-foreground">
+                      {member.userId.email}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full border px-2.5 py-1 text-xs font-medium">
+                    {member.role}
+                  </span>
+                </div>
+              ))}
+
+              {workspaceMembers.length > 5 && (
+                <p className="pt-2 text-center text-xs text-muted-foreground">
+                  +{workspaceMembers.length - 5} more workspace members
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

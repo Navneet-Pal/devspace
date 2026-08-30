@@ -12,7 +12,7 @@ export const uploadProjectFile = asyncHandler(
       req.params.workspaceId as string,
       req.params.projectId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role,
       req.file,
     );
 
@@ -64,7 +64,7 @@ export const deleteProjectFile = asyncHandler(
       req.params.projectId as string,
       req.params.fileId as string,
       req.user._id.toString(),
-      req.projectMember.role,
+      req.projectMember?.role,
     );
 
     return res

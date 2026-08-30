@@ -1,8 +1,10 @@
 import { Document, Types } from "mongoose";
+
 import { Role } from "../../constants/roles.js";
 
 export const INVITATION_STATUS = {
-  PENDING: "PENDING", 
+  PENDING: "PENDING",
+  ACCEPTED: "ACCEPTED",
   REJECTED: "REJECTED",
   CANCELLED: "CANCELLED",
 } as const;

@@ -1,5 +1,6 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { dashboardKeys } from "@/services/dashboard/keys";
 import { documentKeys } from "@/services/document/keys";
 import { documentService } from "@/services/document/service";
 
@@ -7,6 +8,11 @@ import type {
   CreateDocumentRequest,
   UpdateDocumentRequest,
 } from "@/services/document/types";
+
+const workspaceActivityKey = (workspaceId: string) => [
+  "workspace-dashboard-activity",
+  workspaceId,
+];
 
 export const useDocuments = (workspaceId: string, projectId: string) => {
   return useQuery({
@@ -34,6 +40,8 @@ export const useDocument = (
 };
 
 export const useCreateDocument = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({
       workspaceId,
@@ -44,10 +52,29 @@ export const useCreateDocument = () => {
       projectId: string;
       data: CreateDocumentRequest;
     }) => documentService.createDocument(workspaceId, projectId, data),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.projectList(
+          variables.workspaceId,
+          variables.projectId,
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: workspaceActivityKey(variables.workspaceId),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.overview(),
+      });
+    },
   });
 };
 
 export const useUpdateDocument = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({
       workspaceId,
@@ -61,10 +88,37 @@ export const useUpdateDocument = () => {
       data: UpdateDocumentRequest;
     }) =>
       documentService.updateDocument(workspaceId, projectId, documentId, data),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.projectList(
+          variables.workspaceId,
+          variables.projectId,
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.detail(
+          variables.workspaceId,
+          variables.projectId,
+          variables.documentId,
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: workspaceActivityKey(variables.workspaceId),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.overview(),
+      });
+    },
   });
 };
 
 export const useDeleteDocument = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({
       workspaceId,
@@ -75,5 +129,30 @@ export const useDeleteDocument = () => {
       projectId: string;
       documentId: string;
     }) => documentService.deleteDocument(workspaceId, projectId, documentId),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: documentKeys.projectList(
+          variables.workspaceId,
+          variables.projectId,
+        ),
+      });
+
+      queryClient.removeQueries({
+        queryKey: documentKeys.detail(
+          variables.workspaceId,
+          variables.projectId,
+          variables.documentId,
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: workspaceActivityKey(variables.workspaceId),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: dashboardKeys.overview(),
+      });
+    },
   });
 };
