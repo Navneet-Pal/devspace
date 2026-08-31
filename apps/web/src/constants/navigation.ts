@@ -6,6 +6,7 @@ import {
   Users,
   FolderKanban,
   Mail,
+  MessageCircle,
 } from "lucide-react";
 
 export const globalNavigation = [
@@ -25,6 +26,12 @@ export const globalNavigation = [
     title: "My Tasks",
     href: "/dashboard/tasks",
     icon: CheckSquare,
+  },
+
+  {
+    title: "Communication",
+    href: "/dashboard/communication",
+    icon: MessageCircle,
   },
 
   {

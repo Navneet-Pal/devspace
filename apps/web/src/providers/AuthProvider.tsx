@@ -1,16 +1,15 @@
 "use client";
 
-import authService from "@/services/auth/service";
+import authService from "@/services/auth/service"; 
+import { connectSocket, disconnectSocket } from "@/services/socket/socket";
 import { useAuthStore } from "@/store/auth";
-import { useEffect, useState } from "react"; 
+import { useEffect, useState } from "react";
 
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-export default function AuthProvider({
-  children,
-}: AuthProviderProps) {
+export default function AuthProvider({ children }: AuthProviderProps) {
   const { setAuth } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
@@ -19,19 +18,24 @@ export default function AuthProvider({
     const initializeAuth = async () => {
       try {
         const response = await authService.refresh();
-      
-        setAuth(
-          response.data.user,
-          response.data.accessToken
-        );
+
+        const { user, accessToken } = response.data;
+
+        setAuth(user, accessToken);
+
+        connectSocket(accessToken);
       } catch (error) {
-        // User is not logged in or refresh token is invalid.
+        disconnectSocket();
       } finally {
         setLoading(false);
       }
     };
 
     initializeAuth();
+
+    return () => {
+      disconnectSocket();
+    };
   }, [setAuth]);
 
   if (loading) {

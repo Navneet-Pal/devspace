@@ -15,6 +15,7 @@ import activityRoutes from "./modules/activity/route.js";
 import documentRoutes from "./modules/document/route.js";
 import fileRoutes from "./modules/file/route.js";
 import dashboardRoutes from "./modules/dashboard/route.js";
+import communicationRoutes from "./modules/communication/route.js";
 
 const app = express();
 app.use(express.json());
@@ -46,5 +47,6 @@ app.use("/api/v1", activityRoutes);
 app.use("/api/v1", documentRoutes);
 app.use("/api/v1", fileRoutes);
 app.use("/api/v1", dashboardRoutes);
+app.use("/api/v1/communications", communicationRoutes);
 
 export default app;
