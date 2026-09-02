@@ -110,7 +110,8 @@ export default function PullRequestsPage({ params }: Props) {
                       <a href={pr.html_url} target="_blank" rel="noreferrer" />
                     }
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    
+                    <ExternalLink className="h-4 w-4" /> 
                   </Button>
                 </div>
               ))}
