@@ -195,6 +195,20 @@ export default function ProjectLayout({
             </Button>
           </Link>
 
+          {/* Git */}
+          <Link href={`${projectBasePath}/git`}>
+            <Button
+              variant="ghost"
+              className={`rounded-none ${
+                pathname === `${projectBasePath}/git`
+                  ? "border-b-2 border-primary"
+                  : ""
+              }`}
+            >
+              Git
+            </Button>
+          </Link>
+
           {/* Activity */}
           <Link href={`${projectBasePath}/activity`}>
             <Button
