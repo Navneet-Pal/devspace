@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Request, Response } from "express";
 
 import { asyncHandler } from "../../utils/asyncHandler.js";
@@ -5,6 +6,39 @@ import { ApiResponse } from "../../utils/apiResponse.js";
 import { StatusCode } from "../../constants/statusCode.js";
 
 import { projectGitService } from "./service.js";
+
+const getWebhookSecret = () => {
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+  if (!secret) {
+    throw new Error("GITHUB_WEBHOOK_SECRET is not configured.");
+  }
+
+  return secret;
+};
+
+const verifyGitHubSignature = (
+  rawBody: Buffer,
+  signature: string | undefined,
+) => {
+  if (!signature) {
+    return false;
+  }
+
+  const expectedSignature = `sha256=${crypto
+    .createHmac("sha256", getWebhookSecret())
+    .update(rawBody)
+    .digest("hex")}`;
+
+  const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+  const receivedBuffer = Buffer.from(signature, "utf8");
+
+  if (expectedBuffer.length !== receivedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+};
 
 export const getProjectGit = asyncHandler(
   async (req: Request, res: Response) => {
@@ -47,7 +81,6 @@ export const createGitHubInstallUrl = asyncHandler(
 
 export const githubSetup = asyncHandler(async (req: Request, res: Response) => {
   const installationId = Number(req.query.installation_id);
-
   const state = String(req.query.state ?? "");
 
   const result = await projectGitService.handleGitHubSetup(
@@ -57,6 +90,78 @@ export const githubSetup = asyncHandler(async (req: Request, res: Response) => {
 
   return res.redirect(result.redirectUrl);
 });
+
+export const githubWebhook = asyncHandler(
+  async (req: Request, res: Response) => {
+    const signature = req.header("x-hub-signature-256");
+    const event = req.header("x-github-event");
+    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+
+    if (!rawBody) {
+      return res
+        .status(StatusCode.BAD_REQUEST)
+        .json(
+          new ApiResponse(
+            StatusCode.BAD_REQUEST,
+            null,
+            "GitHub webhook raw body is missing.",
+          ),
+        );
+    }
+
+    if (!verifyGitHubSignature(rawBody, signature)) {
+      return res
+        .status(StatusCode.UNAUTHORIZED)
+        .json(
+          new ApiResponse(
+            StatusCode.UNAUTHORIZED,
+            null,
+            "Invalid GitHub webhook signature.",
+          ),
+        );
+    }
+
+    if (!event) {
+      return res
+        .status(StatusCode.BAD_REQUEST)
+        .json(
+          new ApiResponse(
+            StatusCode.BAD_REQUEST,
+            null,
+            "GitHub webhook event is missing.",
+          ),
+        );
+    }
+
+    let payload: Record<string, unknown>;
+
+    try {
+      payload = JSON.parse(rawBody.toString("utf8")) as Record<string, unknown>;
+    } catch {
+      return res
+        .status(StatusCode.BAD_REQUEST)
+        .json(
+          new ApiResponse(
+            StatusCode.BAD_REQUEST,
+            null,
+            "Invalid GitHub webhook payload.",
+          ),
+        );
+    }
+
+    await projectGitService.handleGitHubWebhook(event, payload);
+
+    return res
+      .status(StatusCode.OK)
+      .json(
+        new ApiResponse(
+          StatusCode.OK,
+          null,
+          "GitHub webhook processed successfully.",
+        ),
+      );
+  },
+);
 
 export const getRepositories = asyncHandler(
   async (req: Request, res: Response) => {

@@ -8,6 +8,7 @@ import {
   getProjectGit,
   createGitHubInstallUrl,
   githubSetup,
+  githubWebhook,
   getRepositories,
   connectRepository,
   disconnectGitHub,
@@ -28,6 +29,18 @@ const router = Router();
  * Security is provided by the one-time state stored in MongoDB.
  */
 router.get("/project-git/github/setup", githubSetup);
+
+/*
+ * GitHub webhook.
+ *
+ * IMPORTANT:
+ * This route intentionally does NOT use authenticate.
+ * GitHub sends webhook requests directly to this endpoint.
+ *
+ * Webhook authentication/signature verification is handled
+ * inside the webhook controller.
+ */
+router.post("/project-git/github/webhook", githubWebhook);
 
 /*
  * Everything below this point belongs to an
