@@ -10,9 +10,9 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/hooks/auth/useLogin";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
 
 export default function LoginForm() {
@@ -20,7 +20,7 @@ export default function LoginForm() {
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setError,
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -32,20 +32,45 @@ export default function LoginForm() {
   });
 
   const router = useRouter();
-  const {mutate, isPending} = useLogin();
-  const {setAuth}  = useAuthStore();
+  const searchParams = useSearchParams();
+
+  const { mutate, isPending } = useLogin();
+  const { setAuth } = useAuthStore();
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const getRedirectPath = () => {
+    const redirect = searchParams.get("redirect");
+
+    if (!redirect) {
+      return "/dashboard";
+    }
+
+    /*
+     * Only allow internal paths.
+     * This prevents external redirect URLs such as:
+     * https://example.com
+     */
+    if (!redirect.startsWith("/") || redirect.startsWith("//")) {
+      return "/dashboard";
+    }
+
+    return redirect;
+  };
 
   async function onSubmit(data: LoginFormValues) {
-    
-    mutate( data, {
-      onSuccess : (response)=>{
+    mutate(data, {
+      onSuccess: (response) => {
         toast.success(response.message);
-        setAuth(response.user,response.accessToken);
-        router.push("/dashboard");
+
+        setAuth(response.user, response.accessToken);
+
+        const redirectPath = getRedirectPath();
+
+        router.replace(redirectPath);
       },
 
-      onError : (error) =>{ 
-
+      onError: (error) => {
         setError("email", {
           type: "manual",
           message: error.response?.data.message ?? "Invalid email or password",
@@ -54,17 +79,15 @@ export default function LoginForm() {
         toast.error(
           error.response?.data.message ?? "Invalid email or password",
         );
-
-      }
+      },
     });
   }
-
-  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
+
         <Input
           id="email"
           type="email"
@@ -90,7 +113,7 @@ export default function LoginForm() {
 
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={() => setShowPassword((value) => !value)}
             className="absolute right-2 top-1"
           >
             {showPassword ? (
@@ -102,7 +125,7 @@ export default function LoginForm() {
         </div>
 
         {errors.password && (
-          <p className="text-sm text-red-500 ">{errors.password.message}</p>
+          <p className="text-sm text-red-500">{errors.password.message}</p>
         )}
       </div>
 
@@ -117,6 +140,7 @@ export default function LoginForm() {
                 checked={field.value}
                 onCheckedChange={field.onChange}
               />
+
               <Label htmlFor="rememberMe" className="cursor-pointer">
                 Remember me
               </Label>
@@ -134,7 +158,8 @@ export default function LoginForm() {
 
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isPending ? "SigningIn...." : "Sign In"}
+
+        {isPending ? "Signing In...." : "Sign In"}
       </Button>
     </form>
   );
