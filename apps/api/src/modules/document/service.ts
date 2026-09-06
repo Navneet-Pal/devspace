@@ -4,9 +4,14 @@ import { StatusCode } from "../../constants/statusCode.js";
 import { PROJECT_ROLE, ProjectRole } from "../../constants/projectRole.js";
 import { ApiError } from "../../utils/ApiError.js";
 
+import { emitNotification } from "../../socket/notification.js";
+
 import { projectRepository } from "../project/repository.js";
+import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
 
 import { documentRepository } from "./repository.js";
 
@@ -41,6 +46,33 @@ class DocumentService {
         documentTitle: document.title,
       },
     );
+
+    const workspaceMembers =
+      await workspaceMemberRepository.findByWorkspaceId(workspaceId);
+
+    for (const member of workspaceMembers) {
+      const memberUserId = member.userId as unknown as {
+        _id?: Types.ObjectId;
+      };
+
+      const recipientId = memberUserId._id
+        ? memberUserId._id.toString()
+        : member.userId.toString();
+
+      if (recipientId === userId) {
+        continue;
+      }
+
+      this.sendNotification(
+        recipientId,
+        workspaceId,
+        projectId,
+        NotificationType.DOCUMENT_CREATED,
+        "New document created",
+        `"${document.title}" was created in a project you belong to.`,
+        `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
+      );
+    }
 
     return document;
   }
@@ -122,6 +154,33 @@ class DocumentService {
           },
         },
       );
+
+      const workspaceMembers =
+        await workspaceMemberRepository.findByWorkspaceId(workspaceId);
+
+      for (const member of workspaceMembers) {
+        const memberUserId = member.userId as unknown as {
+          _id?: Types.ObjectId;
+        };
+
+        const recipientId = memberUserId._id
+          ? memberUserId._id.toString()
+          : member.userId.toString();
+
+        if (recipientId === userId) {
+          continue;
+        }
+
+        this.sendNotification(
+          recipientId,
+          workspaceId,
+          projectId,
+          NotificationType.DOCUMENT_UPDATED,
+          "Document updated",
+          `"${document.title}" was updated.`,
+          `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
+        );
+      }
     }
 
     return updatedDocument;
@@ -199,6 +258,33 @@ class DocumentService {
         "Project members cannot delete documents.",
       );
     }
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    href: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        projectId: new Types.ObjectId(projectId),
+        type,
+        title,
+        message,
+        metadata: {
+          href,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 }
 

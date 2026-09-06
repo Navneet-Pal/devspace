@@ -1,7 +1,14 @@
 import { Types } from "mongoose";
+
 import { ROLE, Role } from "../../constants/roles.js";
 import { StatusCode } from "../../constants/statusCode.js";
 import { ApiError } from "../../utils/ApiError.js";
+
+import { emitNotification } from "../../socket/notification.js";
+
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
+
 import { workspaceMemberRepository } from "./repository.js";
 
 class WorkspaceMemberService {
@@ -34,11 +41,23 @@ class WorkspaceMemberService {
       );
     }
 
-    return workspaceMemberRepository.updateRole(
+    const updatedMember = await workspaceMemberRepository.updateRole(
       workspaceId,
       member.userId as Types.ObjectId,
       role,
     );
+
+    if (updatedMember) {
+      this.sendNotification(
+        member.userId.toString(),
+        workspaceId,
+        NotificationType.MEMBER_ROLE_CHANGED,
+        "Your workspace role was changed",
+        `Your role was changed from ${member.role} to ${role}.`,
+      );
+    }
+
+    return updatedMember;
   }
 
   async removeMember(
@@ -100,7 +119,39 @@ class WorkspaceMemberService {
       member.userId as Types.ObjectId,
     );
 
+    this.sendNotification(
+      member.userId.toString(),
+      workspaceId,
+      NotificationType.MEMBER_REMOVED,
+      "You were removed from a workspace",
+      "You have been removed from this workspace.",
+    );
+
     return true;
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        type,
+        title,
+        message,
+        metadata: {
+          href: `/dashboard/workspaces/${workspaceId}`,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 }
 

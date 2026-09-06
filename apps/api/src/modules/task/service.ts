@@ -7,6 +7,10 @@ import { ApiError } from "../../utils/ApiError.js";
 import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
+
+import { emitNotification } from "../../socket/notification.js";
 
 import { taskRepository } from "./repository.js";
 import type {
@@ -62,6 +66,18 @@ class TaskService {
       },
       task._id,
     );
+
+    if (data.assignedTo && data.assignedTo.toString() !== userId) {
+      this.sendNotification(
+        data.assignedTo.toString(),
+        workspaceId,
+        projectId,
+        task._id.toString(),
+        NotificationType.TASK_ASSIGNED,
+        "You were assigned a task",
+        `You were assigned "${task.title}".`,
+      );
+    }
 
     return task;
   }
@@ -190,13 +206,29 @@ class TaskService {
       userId,
       ACTIVITY_TYPE.TASK_STATUS_CHANGED,
       {
-        taskId,
+        taskId: task._id.toString(),
         taskTitle: task.title,
         from: task.status,
         to: status,
       },
       taskId,
     );
+
+    if (task.assignedTo) {
+      const assigneeId = task.assignedTo._id.toString();
+
+      if (assigneeId !== userId) {
+        this.sendNotification(
+          assigneeId,
+          workspaceId,
+          projectId,
+          taskId,
+          NotificationType.TASK_STATUS_CHANGED,
+          "Task status changed",
+          `"${task.title}" status changed from ${task.status} to ${status}.`,
+        );
+      }
+    }
 
     return updatedTask;
   }
@@ -230,13 +262,29 @@ class TaskService {
       userId,
       ACTIVITY_TYPE.TASK_PRIORITY_CHANGED,
       {
-        taskId,
+        taskId: task._id.toString(),
         taskTitle: task.title,
         from: task.priority,
         to: priority,
       },
       taskId,
     );
+
+    if (task.assignedTo) {
+      const assigneeId = task.assignedTo._id.toString();
+
+      if (assigneeId !== userId) {
+        this.sendNotification(
+          assigneeId,
+          workspaceId,
+          projectId,
+          taskId,
+          NotificationType.TASK_PRIORITY_CHANGED,
+          "Task priority changed",
+          `"${task.title}" priority changed from ${task.priority} to ${priority}.`,
+        );
+      }
+    }
 
     return updatedTask;
   }
@@ -300,6 +348,18 @@ class TaskService {
         },
         taskId,
       );
+
+      if (assignedTo !== userId) {
+        this.sendNotification(
+          assignedTo,
+          workspaceId,
+          projectId,
+          taskId,
+          NotificationType.TASK_ASSIGNED,
+          "You were assigned a task",
+          `You were assigned "${task.title}".`,
+        );
+      }
     } else {
       await activityService.record(
         workspaceId,
@@ -392,6 +452,34 @@ class TaskService {
     );
 
     return deletedTask;
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        projectId: new Types.ObjectId(projectId),
+        taskId: new Types.ObjectId(taskId),
+        type,
+        title,
+        message,
+        metadata: {
+          href: `/dashboard/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 
   private normalizeDate(value: Date | string | null | undefined) {

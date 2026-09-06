@@ -14,6 +14,14 @@ import { env } from "../../config/env.js";
 
 const authService = new AuthService();
 
+const refreshTokenCookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite:
+    env.NODE_ENV === "production" ? ("none" as const) : ("strict" as const),
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const data = registerSchema.parse(req.body);
 
@@ -31,12 +39,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const { user, accessToken, refreshToken } = await authService.login(data);
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
   return res.status(200).json({
     success: true,
@@ -121,7 +124,8 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite:
+      env.NODE_ENV === "production" ? ("none" as const) : ("strict" as const),
   });
 
   return res.status(200).json({

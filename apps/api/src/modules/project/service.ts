@@ -3,11 +3,16 @@ import { Types } from "mongoose";
 import { StatusCode } from "../../constants/statusCode.js";
 import { ApiError } from "../../utils/ApiError.js";
 
+import { emitNotification } from "../../socket/notification.js";
+
 import { workspaceRepository } from "../workspace/repository.js";
+import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { projectRepository } from "./repository.js";
 import { projectMemberRepository } from "../projectMember/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
 
 import { PROJECT_ROLE } from "../../constants/projectRole.js";
 
@@ -63,6 +68,33 @@ class ProjectService {
         projectName: project.name,
       },
     );
+
+    const workspaceMembers =
+      await workspaceMemberRepository.findByWorkspaceId(workspaceId);
+
+    for (const member of workspaceMembers) {
+      const memberUserId = member.userId as unknown as {
+        _id?: Types.ObjectId;
+      };
+
+      const recipientId = memberUserId._id
+        ? memberUserId._id.toString()
+        : member.userId.toString();
+
+      if (recipientId === userId) {
+        continue;
+      }
+
+      this.sendNotification(
+        recipientId,
+        workspaceId,
+        project._id.toString(),
+        NotificationType.PROJECT_CREATED,
+        "New project created",
+        `"${project.name}" was created in your workspace.`,
+        `/dashboard/workspaces/${workspaceId}/projects/${project._id.toString()}`,
+      );
+    }
 
     return project;
   }
@@ -171,6 +203,33 @@ class ProjectService {
           },
         },
       );
+
+      const workspaceMembers =
+        await workspaceMemberRepository.findByWorkspaceId(workspaceId);
+
+      for (const member of workspaceMembers) {
+        const memberUserId = member.userId as unknown as {
+          _id?: Types.ObjectId;
+        };
+
+        const recipientId = memberUserId._id
+          ? memberUserId._id.toString()
+          : member.userId.toString();
+
+        if (recipientId === userId) {
+          continue;
+        }
+
+        this.sendNotification(
+          recipientId,
+          workspaceId,
+          projectId,
+          NotificationType.PROJECT_UPDATED,
+          "Project updated",
+          `"${project.name}" was updated.`,
+          `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
+        );
+      }
     }
 
     return updatedProject;
@@ -193,6 +252,33 @@ class ProjectService {
     await projectRepository.delete(projectId);
 
     return true;
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    href: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        projectId: new Types.ObjectId(projectId),
+        type,
+        title,
+        message,
+        metadata: {
+          href,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 }
 

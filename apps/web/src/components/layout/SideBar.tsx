@@ -50,7 +50,7 @@ export const Sidebar = () => {
     <aside className="flex h-screen w-72 flex-col border-r bg-background">
       {/* Logo */}
       <div className="border-b px-6 py-5">
-        <Link href="/dashboard">
+        <Link href="/">
           <h1 className="text-2xl font-bold tracking-tight">DevSpace</h1>
         </Link>
       </div>

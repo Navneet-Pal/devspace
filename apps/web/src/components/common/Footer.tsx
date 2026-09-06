@@ -3,87 +3,150 @@ import Container from "./container";
 
 export default function Footer() {
   return (
-    <footer className=" mt-32 border-t border-zinc-800">
+    <footer className="mt-32 border-t border-zinc-800">
       <Container>
-        <div className="flex flex-col gap-10 py-16">
-          <h3 className="text-3xl font-bold">DevSpace</h3>
+        <div className="flex flex-col gap-12 py-16">
+          {/* Brand */}
+          <div>
+            <Link href="/" className="text-3xl font-bold">
+              DevSpace
+            </Link>
 
-          <p className="text-zinc-400">Build better software, together.</p>
+            <p className="mt-3 max-w-md text-zinc-400">
+              Build better software, collaborate with your team, and manage your
+              entire development workflow from one workspace.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3" >
-            <div className="flex flex-col gap-2">
-              <Link className="font-semibold mb-4" href="">
-                Product
-              </Link>
+          {/* Footer Links */}
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Product */}
+            <div className="flex flex-col gap-3">
+              <h3 className="mb-2 font-semibold">Product</h3>
+
               <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
+                href="#dashboard-preview"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Workspaces
+              </Link>
+
+              <Link
+                href="#dashboard-preview"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Projects
+              </Link>
+
+              <Link
+                href="#dashboard-preview"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Tasks & Kanban
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Documentation
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                File Management
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Git Integration
+              </Link>
+            </div>
+
+            {/* Collaboration */}
+            <div className="flex flex-col gap-3">
+              <h3 className="mb-2 font-semibold">Collaboration</h3>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Team Members
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Invitations
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Comments
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Communication
+              </Link>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
+              >
+                Notifications
+              </Link>
+            </div>
+
+            {/* Resources */}
+            <div className="flex flex-col gap-3">
+              <h3 className="mb-2 font-semibold">Resources</h3>
+
+              <Link
+                href="#features"
+                className="text-zinc-400 transition-colors hover:text-white"
               >
                 Features
               </Link>
-              <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
-              >
-                Pricing
-              </Link>
-              <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
-              >
-                Roadmap
-              </Link>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <Link className="font-semibold mb-4" href="">
-                Company
-              </Link>
               <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
+                href="#dashboard-preview"
+                className="text-zinc-400 transition-colors hover:text-white"
               >
-                About
+                Product Preview
               </Link>
-              <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
-              >
-                Contact
-              </Link>
-              <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
-              >
-                Privacy
-              </Link>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <Link className="font-semibold mb-4" href="">
-                Resource
-              </Link>
               <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
+                href="/register"
+                className="text-zinc-400 transition-colors hover:text-white"
               >
-                Document
+                Get Started
               </Link>
+
               <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
+                href="/login"
+                className="text-zinc-400 transition-colors hover:text-white"
               >
-                Github
-              </Link>
-              <Link
-                className="text-zinc-400 hover:text-white transition-colors"
-                href=""
-              >
-                Support
-              </Link>
+                Login
+              </Link> 
             </div>
           </div>
-          <p>@ 2026 DevSpace. All rights reserved.</p>
+
+          {/* Bottom */}
+          <div className="border-t border-zinc-800 pt-6">
+            <p className="text-sm text-zinc-500">
+              © 2026 DevSpace. All rights reserved.
+            </p>
+          </div>
         </div>
       </Container>
     </footer>
