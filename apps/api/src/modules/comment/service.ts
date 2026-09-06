@@ -4,11 +4,15 @@ import { StatusCode } from "../../constants/statusCode.js";
 import { PROJECT_ROLE, ProjectRole } from "../../constants/projectRole.js";
 import { ApiError } from "../../utils/ApiError.js";
 
+import { emitNotification } from "../../socket/notification.js";
+
 import { projectMemberRepository } from "../projectMember/repository.js";
 import { projectRepository } from "../project/repository.js";
 import { taskRepository } from "../task/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
 
 import { commentRepository } from "./repository.js";
 
@@ -23,7 +27,9 @@ class CommentService {
   ) {
     await this.validateProject(workspaceId, projectId);
 
-    await this.validateMentions(projectId, data.mentions ?? []);
+    const mentionIds = data.mentions ?? [];
+
+    await this.validateMentions(projectId, mentionIds);
 
     const comment = await commentRepository.create(
       new Types.ObjectId(workspaceId),
@@ -45,6 +51,22 @@ class CommentService {
       },
     );
 
+    for (const mentionId of new Set(mentionIds)) {
+      if (mentionId === userId) {
+        continue;
+      }
+
+      this.sendNotification(
+        mentionId,
+        workspaceId,
+        projectId,
+        null,
+        NotificationType.TASK_COMMENTED,
+        "You were mentioned",
+        "You were mentioned in a project comment.",
+      );
+    }
+
     return comment;
   }
 
@@ -57,9 +79,11 @@ class CommentService {
   ) {
     await this.validateProject(workspaceId, projectId);
 
-    await this.validateTask(projectId, taskId);
+    const task = await this.validateTask(projectId, taskId);
 
-    await this.validateMentions(projectId, data.mentions ?? []);
+    const mentionIds = data.mentions ?? [];
+
+    await this.validateMentions(projectId, mentionIds);
 
     const comment = await commentRepository.create(
       new Types.ObjectId(workspaceId),
@@ -81,6 +105,38 @@ class CommentService {
       },
       taskId,
     );
+
+    if (task.assignedTo) {
+      const assigneeId = task.assignedTo._id.toString();
+
+      if (assigneeId !== userId) {
+        this.sendNotification(
+          assigneeId,
+          workspaceId,
+          projectId,
+          taskId,
+          NotificationType.TASK_COMMENTED,
+          "New comment on your task",
+          `Someone commented on "${task.title}".`,
+        );
+      }
+    }
+
+    for (const mentionId of new Set(mentionIds)) {
+      if (mentionId === userId) {
+        continue;
+      }
+
+      this.sendNotification(
+        mentionId,
+        workspaceId,
+        projectId,
+        taskId,
+        NotificationType.TASK_COMMENTED,
+        "You were mentioned",
+        `You were mentioned in a comment on "${task.title}".`,
+      );
+    }
 
     return comment;
   }
@@ -208,6 +264,8 @@ class CommentService {
     if (!task) {
       throw new ApiError(StatusCode.NOT_FOUND, "Task not found.");
     }
+
+    return task;
   }
 
   private async validateMentions(projectId: string, mentionIds: string[]) {
@@ -230,6 +288,40 @@ class CommentService {
         );
       }
     }
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string | null,
+    type: NotificationType,
+    title: string,
+    message: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        projectId: new Types.ObjectId(projectId),
+        ...(taskId
+          ? {
+              taskId: new Types.ObjectId(taskId),
+            }
+          : {}),
+        type,
+        title,
+        message,
+        metadata: {
+          href: taskId
+            ? `/dashboard/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
+            : `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 
   private checkCommentModificationPermission(

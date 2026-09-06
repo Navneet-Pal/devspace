@@ -19,6 +19,17 @@ export const initializeSocket = (httpServer: HttpServer) => {
 
     console.log(`socket connected: ${socket.id} | user: ${userId}`);
 
+    /*
+     * Every authenticated user gets a private room.
+     *
+     * Notification events can later be emitted to:
+     * user:${userId}
+     *
+     * This keeps notifications isolated to the
+     * intended recipient.
+     */
+    socket.join(`user:${userId}`);
+
     registerCommunicationHandlers(io, socket);
 
     socket.on("disconnect", () => {

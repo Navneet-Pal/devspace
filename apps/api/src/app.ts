@@ -18,6 +18,7 @@ import fileRoutes from "./modules/file/route.js";
 import dashboardRoutes from "./modules/dashboard/route.js";
 import communicationRoutes from "./modules/communication/route.js";
 import projectGitRoutes from "./modules/projectGit/route.js";
+import notificationRoutes from "./modules/notification/route.js";
 
 const app = express();
 
@@ -66,5 +67,6 @@ app.use("/api/v1", fileRoutes);
 app.use("/api/v1", dashboardRoutes);
 app.use("/api/v1/communications", communicationRoutes);
 app.use("/api/v1", projectGitRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 export default app;

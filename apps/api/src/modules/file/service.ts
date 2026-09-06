@@ -4,14 +4,16 @@ import { StatusCode } from "../../constants/statusCode.js";
 import { PROJECT_ROLE, ProjectRole } from "../../constants/projectRole.js";
 import { ApiError } from "../../utils/ApiError.js";
 
+import { emitNotification } from "../../socket/notification.js";
+
 import { projectRepository } from "../project/repository.js";
+import { workspaceMemberRepository } from "../workspaceMember/repository.js";
 import { activityService } from "../activity/service.js";
 import { ACTIVITY_TYPE } from "../activity/types.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
 
-import {
-  deleteFile,
-  uploadFile, 
-} from "../../utils/upload.js";
+import { deleteFile, uploadFile } from "../../utils/upload.js";
 
 import { fileRepository } from "./repository.js";
 
@@ -64,10 +66,36 @@ class FileService {
       ACTIVITY_TYPE.FILE_UPLOADED,
       {
         fileId: savedFile._id.toString(),
-
         fileName: savedFile.originalName,
       },
     );
+
+    const workspaceMembers =
+      await workspaceMemberRepository.findByWorkspaceId(workspaceId);
+
+    for (const member of workspaceMembers) {
+      const memberUserId = member.userId as unknown as {
+        _id?: Types.ObjectId;
+      };
+
+      const recipientId = memberUserId._id
+        ? memberUserId._id.toString()
+        : member.userId.toString();
+
+      if (recipientId === userId) {
+        continue;
+      }
+
+      this.sendNotification(
+        recipientId,
+        workspaceId,
+        projectId,
+        NotificationType.FILE_UPLOADED,
+        "New file uploaded",
+        `"${savedFile.originalName}" was uploaded to a project you belong to.`,
+        `/dashboard/workspaces/${workspaceId}/projects/${projectId}`,
+      );
+    }
 
     return savedFile;
   }
@@ -171,6 +199,33 @@ class FileService {
         "Only project admins can delete files.",
       );
     }
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    href: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new Types.ObjectId(userId),
+        workspaceId: new Types.ObjectId(workspaceId),
+        projectId: new Types.ObjectId(projectId),
+        type,
+        title,
+        message,
+        metadata: {
+          href,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 }
 
