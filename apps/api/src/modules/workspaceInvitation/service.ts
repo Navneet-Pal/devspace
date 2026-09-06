@@ -1,19 +1,18 @@
 import mongoose from "mongoose";
 
 import { ROLE, Role } from "../../constants/roles.js";
-
 import { StatusCode } from "../../constants/statusCode.js";
-
 import { ApiError } from "../../utils/ApiError.js";
 
+import { emitNotification } from "../../socket/notification.js";
+
 import { UserRepository } from "../user/respository.js";
-
 import { workspaceRepository } from "../workspace/repository.js";
-
 import { workspaceMemberRepository } from "../workspaceMember/repository.js";
+import { notificationService } from "../notification/service.js";
+import { NotificationType } from "../notification/types.js";
 
 import { workspaceInvitationRepository } from "./respository.js";
-
 import { INVITATION_STATUS } from "./types.js";
 
 const userRepository = new UserRepository();
@@ -85,12 +84,23 @@ class WorkspaceInvitationService {
      * This preserves complete invitation
      * history permanently.
      */
-    return workspaceInvitationRepository.create(
+    const invitation = await workspaceInvitationRepository.create(
       workspace._id,
       user._id,
       new mongoose.Types.ObjectId(invitedBy),
       role,
     );
+
+    this.sendNotification(
+      userId,
+      workspaceId,
+      NotificationType.INVITATION_RECEIVED,
+      "You received a workspace invitation",
+      `You have been invited to join "${workspace.name}".`,
+      `/dashboard/invitations`,
+    );
+
+    return invitation;
   }
 
   async acceptInvitation(invitationId: string, userId: string) {
@@ -149,6 +159,15 @@ class WorkspaceInvitationService {
 
       await session.commitTransaction();
 
+      this.sendNotification(
+        invitation.invitedBy.toString(),
+        invitation.workspaceId.toString(),
+        NotificationType.INVITATION_ACCEPTED,
+        "Invitation accepted",
+        "Your workspace invitation was accepted.",
+        `/dashboard/workspaces/${invitation.workspaceId.toString()}`,
+      );
+
       return updatedInvitation;
     } catch (error) {
       await session.abortTransaction();
@@ -180,10 +199,21 @@ class WorkspaceInvitationService {
       );
     }
 
-    return workspaceInvitationRepository.updateStatus(
+    const updatedInvitation = await workspaceInvitationRepository.updateStatus(
       invitationId,
       INVITATION_STATUS.REJECTED,
     );
+
+    this.sendNotification(
+      invitation.invitedBy.toString(),
+      invitation.workspaceId.toString(),
+      NotificationType.INVITATION_REJECTED,
+      "Invitation rejected",
+      "Your workspace invitation was rejected.",
+      `/dashboard/workspaces/${invitation.workspaceId.toString()}`,
+    );
+
+    return updatedInvitation;
   }
 
   async cancelInvitation(invitationId: string, invitedBy: string) {
@@ -220,6 +250,31 @@ class WorkspaceInvitationService {
 
   async getMyInvitations(userId: string) {
     return workspaceInvitationRepository.findByUserId(userId);
+  }
+
+  private sendNotification(
+    userId: string,
+    workspaceId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    href: string,
+  ) {
+    void notificationService
+      .createNotification({
+        userId: new mongoose.Types.ObjectId(userId),
+        workspaceId: new mongoose.Types.ObjectId(workspaceId),
+        type,
+        title,
+        message,
+        metadata: {
+          href,
+        },
+      })
+      .then((notification) => {
+        emitNotification(userId, notification);
+      })
+      .catch(() => undefined);
   }
 }
 
