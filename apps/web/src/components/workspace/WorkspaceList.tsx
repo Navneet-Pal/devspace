@@ -202,7 +202,7 @@ export const WorkspaceList = () => {
                           <option value="NAME_DESC">Name Z → A</option>
                         </select>
 
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
                       </div>
                     </div>
                   </CardContent>
@@ -284,7 +284,7 @@ export const WorkspaceList = () => {
                     key={workspace._id}
                     id={workspace._id}
                     name={workspace.name}
-                    description={workspace.description}
+                    description={workspace.description ?? undefined}
                   />
                 ))}
               </div>
