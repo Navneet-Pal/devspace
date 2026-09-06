@@ -24,6 +24,18 @@ import { env } from "./config/env.js";
 
 const app = express();
 
+const clientOrigin = new URL(env.CLIENT_URL).origin;
+
+app.use(
+  cors({
+    origin: clientOrigin,
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    optionsSuccessStatus: 204,
+  }),
+);
+
 app.use(
   express.json({
     verify: (req, _res, buffer) => {
@@ -42,13 +54,6 @@ app.use(
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-app.use(
-  cors({
-    origin: env.CLIENT_URL,
-    credentials: true,
-  }),
-);
 
 app.use("/api/auth", authRoles);
 app.use("/api/auth", verificationRoutes);
