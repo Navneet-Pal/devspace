@@ -14,7 +14,7 @@ export const PROJECT_PERMISSION = {
   TASK_CHANGE_STATUS: "task:change_status",
   TASK_CHANGE_PRIORITY: "task:change_priority",
 
-  COMMENT_CREATE: "comment:create",
+  COMMENT_CREATE: "comment:create", 
   COMMENT_UPDATE: "comment:update",
   COMMENT_DELETE: "comment:delete",
 

@@ -3,11 +3,12 @@ import { Server as SocketIOServer } from "socket.io";
 
 import { socketAuthenticate } from "./auth.js";
 import { registerCommunicationHandlers } from "./communication.js";
+import { env } from "../config/env.js";
 
 export const initializeSocket = (httpServer: HttpServer) => {
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: env.CLIENT_URL,
       credentials: true,
     },
   });
@@ -18,6 +19,17 @@ export const initializeSocket = (httpServer: HttpServer) => {
     const userId = socket.data.user._id;
 
     console.log(`socket connected: ${socket.id} | user: ${userId}`);
+
+    /*
+     * Every authenticated user gets a private room.
+     *
+     * Notification events can later be emitted to:
+     * user:${userId}
+     *
+     * This keeps notifications isolated to the
+     * intended recipient.
+     */
+    socket.join(`user:${userId}`);
 
     registerCommunicationHandlers(io, socket);
 

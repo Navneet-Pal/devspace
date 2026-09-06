@@ -31,7 +31,9 @@ export const projectGitRepository = {
     },
   ) {
     return ProjectGitIntegration.findOneAndUpdate(
-      { projectId },
+      {
+        projectId,
+      },
       {
         $set: data,
       },
@@ -45,6 +47,22 @@ export const projectGitRepository = {
   async deleteByProjectId(projectId: string | Types.ObjectId) {
     return ProjectGitIntegration.findOneAndDelete({
       projectId,
+    });
+  },
+
+  async findByInstallationAndRepository(
+    installationId: number,
+    repositoryFullName: string,
+  ) {
+    return ProjectGitIntegration.findOne({
+      installationId,
+      repositoryFullName,
+    });
+  },
+
+  async deleteByInstallationId(installationId: number) {
+    return ProjectGitIntegration.findOneAndDelete({
+      installationId,
     });
   },
 

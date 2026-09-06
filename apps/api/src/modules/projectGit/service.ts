@@ -7,7 +7,6 @@ import { ApiError } from "../../utils/ApiError.js";
 import { projectRepository } from "../project/repository.js";
 import { projectGitRepository } from "./repository.js";
 
-
 import { GIT_PROVIDER, type ConnectRepositoryInput } from "./types.js";
 
 import { connectRepositorySchema } from "./validation.js";
@@ -376,6 +375,101 @@ class ProjectGitService {
       integration.repositoryOwner!,
       integration.repositoryName!,
     );
+  }
+
+  async handleGitHubWebhook(event: string, payload: Record<string, unknown>) {
+    const installation =
+      typeof payload.installation === "object" && payload.installation !== null
+        ? (payload.installation as Record<string, unknown>)
+        : null;
+
+    const installationId =
+      typeof installation?.id === "number" ? installation.id : null;
+
+    const repository =
+      typeof payload.repository === "object" && payload.repository !== null
+        ? (payload.repository as Record<string, unknown>)
+        : null;
+
+    const repositoryFullName =
+      typeof repository?.full_name === "string" ? repository.full_name : null;
+
+    const action = typeof payload.action === "string" ? payload.action : null;
+
+    // Installation events do not always contain a repository.
+    if (event === "installation") {
+      if (action === "deleted" && installationId) {
+        await projectGitRepository.deleteByInstallationId(installationId);
+
+        console.log("GitHub installation disconnected:", {
+          installationId,
+        });
+      } else {
+        console.log("GitHub installation event received:", {
+          action,
+          installationId,
+        });
+      }
+
+      return true;
+    }
+
+    // Repository events must contain both identifiers.
+    if (!installationId || !repositoryFullName) {
+      console.log("GitHub webhook ignored: missing integration identifiers.", {
+        event,
+        action,
+        installationId,
+        repositoryFullName,
+      });
+
+      return true;
+    }
+
+    const integration =
+      await projectGitRepository.findByInstallationAndRepository(
+        installationId,
+        repositoryFullName,
+      );
+
+    if (!integration) {
+      console.log("GitHub webhook ignored: repository not connected.", {
+        event,
+        repositoryFullName,
+        installationId,
+      });
+
+      return true;
+    }
+
+    switch (event) {
+      case "push":
+        console.log("GitHub push processed:", {
+          projectId: integration.projectId.toString(),
+          repository: repositoryFullName,
+          ref: typeof payload.ref === "string" ? payload.ref : null,
+        });
+        break;
+
+      case "pull_request":
+        console.log("GitHub pull request processed:", {
+          projectId: integration.projectId.toString(),
+          repository: repositoryFullName,
+          action,
+          number: typeof payload.number === "number" ? payload.number : null,
+        });
+        break;
+
+      default:
+        console.log("GitHub webhook event received:", {
+          event,
+          action,
+          projectId: integration.projectId.toString(),
+          repository: repositoryFullName,
+        });
+    }
+
+    return true;
   }
 }
 
