@@ -13,6 +13,7 @@ import {
   VerifyEmailResponse,
   UpdateProfileRequest,
   UpdateProfileResponse,
+  UpdateAvatarResponse,
   AuthUser,
 } from "./types";
 
@@ -85,6 +86,18 @@ class AuthService {
     const response = await axiosInstance.patch<UpdateProfileResponse>(
       "/auth/me",
       data,
+    );
+
+    return response.data;
+  }
+
+  async updateAvatar(file: File): Promise<UpdateAvatarResponse> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await axiosInstance.patch<UpdateAvatarResponse>(
+      "/auth/avatar",
+      formData,
     );
 
     return response.data;
