@@ -3,11 +3,12 @@ import { Server as SocketIOServer } from "socket.io";
 
 import { socketAuthenticate } from "./auth.js";
 import { registerCommunicationHandlers } from "./communication.js";
+import { env } from "../config/env.js";
 
 export const initializeSocket = (httpServer: HttpServer) => {
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: env.CLIENT_URL,
       credentials: true,
     },
   });

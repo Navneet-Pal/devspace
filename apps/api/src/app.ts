@@ -20,6 +20,8 @@ import communicationRoutes from "./modules/communication/route.js";
 import projectGitRoutes from "./modules/projectGit/route.js";
 import notificationRoutes from "./modules/notification/route.js";
 
+import { env } from "./config/env.js";
+
 const app = express();
 
 app.use(
@@ -43,14 +45,12 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: env.CLIENT_URL,
     credentials: true,
   }),
 );
 
 app.use("/api/auth", authRoles);
-app.use(errorHandler);
-
 app.use("/api/auth", verificationRoutes);
 app.use("/api/v1/workspaces", workspaceRoutes);
 
@@ -68,5 +68,7 @@ app.use("/api/v1", dashboardRoutes);
 app.use("/api/v1/communications", communicationRoutes);
 app.use("/api/v1", projectGitRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+
+app.use(errorHandler);
 
 export default app;
